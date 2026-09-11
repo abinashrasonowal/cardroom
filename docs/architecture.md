@@ -138,7 +138,8 @@ refresh / blip     → same cookie → same seat, hand restored
 ```java
 record PlayerId(String value) {}
 record RoomCode(String value) {}                 // Crockford base32, 6 chars ≈ 2^30
-record Seat(int index, PlayerId id, String nick, Set<SocketId> sockets) {}
+record Seat(int index, PlayerId id, String nick) {}          // engine-contract
+record Occupant(Seat seat, Set<SocketId> sockets) {}        // engine-core, room side only
 
 final class Room {
     RoomCode code; String gameId; PlayerId hostId;
@@ -151,6 +152,11 @@ record Hand(int index, String commit, byte[] serverSeed, long startSeq, long end
 
 record SequencedEvent<E extends GameEvent>(long seq, long at, int v, E event) {}
 ```
+
+**Sockets are not in `Seat`.** §3 forbids a game module from touching sockets, so the seat
+a game sees carries no connection state. It would also be a correctness trap: an `S` holding
+a seat list would change identity every time a tab opened, for reasons unrelated to the rules.
+The room tracks sockets on `Occupant`.
 
 **`Hand`, not `Room`, owns the seed.** A room plays many hands; reusing one seed means
 that after the first reveal every player can compute the next deck. New seed, new commit,
@@ -414,7 +420,7 @@ rather than re-arming, so a buggy default move cannot freeze the room.
 ```text
 join      each player sends a random clientSeed
 hand start serverSeed = 32 secure bytes;  commit = sha256(serverSeed)  → broadcast
-          handSeed = HMAC-SHA256(serverSeed, clientSeed₁‖…‖clientSeedₙ‖handIndex)
+          handSeed = HMAC-SHA256(serverSeed, "seed₁:…:seedₙ|handIndex")   UTF-8, seeds are lower-case hex
 play      RandomSource = HmacRandom(handSeed), counter-based, rejection-sampled nextInt
 hand end  broadcast serverSeed
 verify    sha256(serverSeed) == commit  AND  replay(log, handSeed) == what was broadcast
@@ -427,6 +433,12 @@ contribution means no single party can steer the deal — this is why every prod
 provably-fair implementation derives outcomes as `HMAC(serverSeed, clientSeed:nonce)`.
 It is roughly fifteen extra lines and it is the difference between "the server didn't
 change its mind" and "nobody could rig this".
+
+**The separator is load-bearing.** Concatenating raw seeds is ambiguous: `{"a","bc"}` and
+`{"ab","c"}` produce the same message, so a player could pick a seed that reproduces a deal
+they had already simulated. Client seeds are validated as 8..128 lower-case hex characters and
+joined with `:`, which no seed can contain. `HmacRandom.knownAnswerVector` pins the byte
+format; it was reproduced in ~20 lines of Python to prove a browser can do the same.
 
 **Not `SplittableRandom`.** Its only constructor takes a `long`, so 32 secure bytes become
 8, and JavaScript has no equivalent — the `/verify` page would need a hand-ported
