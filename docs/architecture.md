@@ -3,7 +3,12 @@
 A room-based multiplayer card platform. One person creates a room, shares the code,
 everyone else joins and plays. No sign-up, no profile, no wallet.
 
-**Implementation: Java 21.** Four Gradle subprojects, one deployable JVM.
+**Implementation: Java 17.** Four Gradle subprojects, one deployable JVM.
+
+Java 17, not 21, because the dev box already runs 17 for another project and nothing here
+needs Loom: rooms are counted in hundreds, so a platform thread each is affordable. The
+two costs are named in §10. Moving to 21 is one line in the Gradle toolchain block plus
+the thread construction in `RoomActor`.
 
 The server is authoritative for every rule. The room creator ("host"/"master") holds a
 **role**, not authority: their privileges are lobby-level only.
@@ -59,7 +64,7 @@ CLIENTS (browser tabs) ── host · players · spectators · bots
 GAME SERVER — one JVM
    1 WS GATEWAY      cookie→PlayerId · rate limit · envelope parse · JSON
    2 ROOM REGISTRY   roomCode → RoomActor · create/join/GC
-     └ ROOM ACTOR    one virtual thread + bounded queue per room (single writer)
+     └ ROOM ACTOR    one thread + bounded queue per room (single writer)
    3 ENGINE RUNTIME  validate → reduce → fold → append → advance
                      turn clock · seeded RNG · timeout auto-play
    4 PROJECTION      one PlayerView per viewer; hidden cards never leave the JVM
@@ -282,7 +287,7 @@ freezes alive. The engine defends this anyway (§11), and a contract test assert
      PlayerId actor = cookie.verify(socket);
      if (!registry.find(code).offer(new Submit(actor, payload, msgId)))
          socket.close(OVERLOADED);                       // bounded queue = backpressure
-   ─────────── everything below runs on that room's single virtual thread ───────────
+   ─────────── everything below runs on that room's single thread ───────────
 1  I intent = def.parseIntent(raw);
    Validation v = def.validate(state, intent, actor);
      if (v instanceof Reject r) { broadcaster.toPlayer(actor, rejected(msgId, r)); return; }
@@ -314,7 +319,17 @@ don't drift.
 
 ## 10. Concurrency
 
-One `RoomActor` = one virtual thread = one writer. `Thread.ofVirtual().name("room-" + code).start(this)`.
+One `RoomActor` = one thread = one writer.
+
+```java
+Thread t = new Thread(this, "room-" + code);
+t.setDaemon(true);            // a live room must never hold the JVM open
+t.start();
+```
+
+On 21 this becomes `Thread.ofVirtual().name("room-" + code).start(this)` and nothing else
+changes: the actor blocks on `inbox.take()` and does no other blocking I/O, so carrier
+pinning is not a concern either way.
 
 ```java
 private final BlockingQueue<Command> inbox = new ArrayBlockingQueue<>(256);
@@ -332,9 +347,9 @@ timeout whose `armedAtSeq != seq`. Without it: the timer fires at T−1ms and qu
 message already in the queue; the room then auto-plays the *next* player's turn instantly.
 At 15-second turns and human reaction times that is a weekly occurrence, not an edge case.
 
-`TurnClock` uses a shared `ScheduledExecutorService` on platform threads. That is correct
-here precisely because it only does a non-blocking `inbox.offer` — it must never touch
-`def.*` or `state`.
+`TurnClock` uses one shared `ScheduledExecutorService` for the whole JVM, not a thread per
+room. It only does a non-blocking `inbox.offer` — it must never touch `def.*` or `state`,
+which is what keeps a handful of scheduler threads sufficient for every room at once.
 
 **Safe publication.** `private volatile S state`. Records are shallowly immutable: a
 `record BjState(List<Card> deck)` holding an `ArrayList` is mutable behind a façade, so
@@ -358,9 +373,12 @@ while (open) {
 }
 ```
 
-**Known ceiling:** virtual threads are not preemptible, so a game module looping forever
-inside `reduce` occupies a carrier thread permanently and a handful of wedged rooms starve
-every other room in the process. Game modules are trusted first-party code; the mitigation
+**Known ceilings.** A platform thread per room costs ~1MB of stack reserved, so this
+design holds thousands of live rooms per JVM, not millions. That is far past the point
+where §17's sharding applies, so it is not the binding constraint.
+
+Neither platform nor virtual threads are preemptible, so a game module looping forever
+inside `reduce` wedges that room's thread permanently. Game modules are trusted first-party code; the mitigation
 is a cap on `events.size()` and this paragraph, not a sandbox.
 
 ---
