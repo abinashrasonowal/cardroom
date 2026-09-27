@@ -32,7 +32,7 @@ export const GameCard: React.FC<GameCardProps> = ({ def, selected, onSelect }) =
             {def.icon ?? def.suitGlyph}
           </div>
           <div className="flex items-center gap-1.5">
-            {def.live && (
+            {def.serverGameId && (
               <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
                 Live
               </span>

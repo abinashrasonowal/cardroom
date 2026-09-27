@@ -17,7 +17,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     rulesOverview:
       'Players draw one card each in seat order, 15 seconds per turn. Highest rank wins; a tied rank is broken by suit (♠ > ♥ > ♦ > ♣). Cards stay hidden from everyone else until the last player has drawn.',
     defaultCode: '',
-    live: true,
+    serverGameId: 'high-card',
   },
   hearts: {
     key: 'hearts',
@@ -29,10 +29,11 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     suitGlyph: '♥',
     suitColor: 'text-red-600',
     description: 'Avoid ♠Q & ♥ penalty cards. Shoot the moon for 26 pts.',
-    tag: 'Standard Rules',
+    tag: 'Live · Server',
     rulesOverview:
-      'Goal is to avoid taking points: each Heart is 1 penalty pt, Queen of Spades (♠Q) is 13 pts. Taking all 26 points shoots the moon, giving 26 pts to each opponent instead!',
+      'Four players. Pass three cards left, right, across, then hold. The 2♣ leads; follow suit; no points on the first trick; hearts cannot be led until broken. Each heart is 1 pt and the Q♠ 13 — take all 26 to shoot the moon. First to 100 ends the game; lowest score wins.',
     defaultCode: 'HRT-8429',
+    serverGameId: 'hearts',
     rule1: 'Omnibus (+10 Jack of Diamonds ♦)',
     rule2: 'Passing (Left · Right · Across · Hold)',
     rule3: 'Fast Game to 50 pts (Default 100)',

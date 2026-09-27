@@ -38,11 +38,12 @@ public class SocketHub implements Broadcaster {
     private static final int BUFFER_LIMIT_BYTES = 512 * 1024;
     private static final long DROP_AFTER_MS = 45_000;
 
-    /** One socket: who it is, and which room it joined (null until its first {@code join}). */
+    /** One socket: who it is, and which room and game it joined (null until its first {@code join}). */
     static final class Conn {
         final WebSocketSession session;
         final PlayerId player;
         volatile RoomCode room;
+        volatile String game;
         volatile long lastSeen = System.currentTimeMillis();
 
         Conn(WebSocketSession session, PlayerId player) {
@@ -86,9 +87,8 @@ public class SocketHub implements Broadcaster {
     @Override
     public void toRoom(RoomCode code, Map<PlayerId, PlayerView> views) {
         views.forEach((player, view) -> {
-            UpdateFrame frame = UpdateFrame.of(code, view);
             for (Conn conn : byPlayer.getOrDefault(player, Set.of())) {
-                if (code.equals(conn.room)) send(conn, frame);
+                if (code.equals(conn.room)) send(conn, UpdateFrame.of(code, conn.game, view));
             }
         });
     }
@@ -100,8 +100,7 @@ public class SocketHub implements Broadcaster {
      */
     @Override
     public void toPlayer(PlayerId player, Object message) {
-        ServerFrame frame = FrameMapper.toFrame(message);
-        for (Conn conn : byPlayer.getOrDefault(player, Set.of())) send(conn, frame);
+        for (Conn conn : byPlayer.getOrDefault(player, Set.of())) send(conn, FrameMapper.toFrame(message, conn.game));
     }
 
     void send(Conn conn, ServerFrame frame) {

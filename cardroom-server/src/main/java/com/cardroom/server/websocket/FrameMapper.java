@@ -13,10 +13,11 @@ final class FrameMapper {
 
     private FrameMapper() {}
 
-    static ServerFrame toFrame(Object message) {
+    /** @param game the room's game id, stamped on frames that carry a view */
+    static ServerFrame toFrame(Object message, String game) {
         if (message instanceof Broadcaster.Accepted a) return AcceptedFrame.of(a.clientMsgId(), a.seq());
         if (message instanceof Broadcaster.Rejected r) return RejectedFrame.of(r.clientMsgId(), r.error(), r.detail());
-        if (message instanceof Snapshot s) return SyncFrame.of(s.seq(), s.view());
+        if (message instanceof Snapshot s) return SyncFrame.of(s.seq(), game, s.view());
         if (message instanceof Broadcaster.Fault f) return FaultFrame.of(f.room(), f.detail());
         throw new IllegalArgumentException("no wire form for " + message.getClass().getName());
     }

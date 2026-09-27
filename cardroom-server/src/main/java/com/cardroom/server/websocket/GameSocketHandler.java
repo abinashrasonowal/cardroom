@@ -109,6 +109,7 @@ public class GameSocketHandler extends TextWebSocketHandler {
             return;
         }
         conn.room = code;
+        conn.game = actor.get().gameId();
         offer(conn, frame.id(), actor.get(), new Command.Join(conn.player,
                 new SocketId(conn.session.getId()), join.nick(), join.clientSeed()));
     }

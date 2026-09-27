@@ -10,7 +10,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -60,6 +64,7 @@ class GatewayIntegrationTest {
         JsonNode lobby = bob.await(f -> isLobbyWith(f, 2));
         assertEquals("high-card", lobby.at("/view/gameId").asText());
         assertEquals(room, lobby.at("/view/room").asText(), "RoomCode serializes as a bare string");
+        assertEquals("high-card", lobby.path("game").asText(), "every view frame names its game");
 
         alice.send("start", Map.of());
         JsonNode first = alice.await(f -> isGame(f));
@@ -138,6 +143,57 @@ class GatewayIntegrationTest {
     }
 
     @Test
+    void heartsSeatsFourPlayersAndDealsEachThirteenPrivateCards() throws Exception {
+        String room = createRoom("hearts");
+        List<Client> players = new ArrayList<>();
+        try {
+            for (String nick : List.of("north", "east", "south", "west")) {
+                Client player = connect(cookies.mint());
+                players.add(player);
+                player.send("join", Map.of("room", room, "nick", nick, "clientSeed", SEED));
+                // Joined one at a time, so the first is host and seat order is join order.
+                players.get(0).await(f -> isLobbyWith(f, players.size()));
+                if (players.size() == 3) {
+                    players.get(0).send("start", Map.of());
+                    assertEquals("NOT_ENOUGH_PLAYERS",
+                            players.get(0).await(f -> "rejected".equals(f.path("type").asText())).path("error").asText());
+                }
+            }
+            players.get(0).send("start", Map.of());
+
+            Set<String> dealt = new HashSet<>();
+            List<JsonNode> views = new ArrayList<>();
+            for (Client player : players) {
+                JsonNode frame = player.await(f -> isGame(f));
+                assertEquals("hearts", frame.path("game").asText());
+                JsonNode view = frame.path("view");
+                assertEquals("PASSING", view.path("phase").asText());
+                assertEquals(13, view.path("myHand").size());
+                view.path("myHand").forEach(card -> dealt.add(card.toString()));
+                view.path("seats").forEach(seat -> assertEquals(13, seat.path("cardCount").asInt()));
+                assertFalse(view.path("seats").get(0).has("cards"), "other hands are counts, never cards");
+                views.add(view);
+            }
+            assertEquals(52, dealt.size(), "four private hands, no card seen twice");
+
+            for (int i = 0; i < 4; i++) {
+                JsonNode hand = views.get(i).path("myHand");
+                players.get(i).send("intent", Map.of("type", "pass", "cards", List.of(hand.get(0), hand.get(1), hand.get(2))));
+            }
+            JsonNode playing = players.get(0).await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
+            String onClock = playing.at("/view/onClock").asText();
+            Client leader = players.stream().filter(p -> p.playerId.equals(onClock)).findFirst().orElseThrow();
+            JsonNode leaderView = leader.await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
+            assertEquals("TWO", leaderView.at("/view/legal/0/rank").asText(), "the 2♣ holder leads, and only the 2♣");
+
+            leader.send("intent", Map.of("type", "play", "card", leaderView.at("/view/legal/0")));
+            leader.await(f -> "accepted".equals(f.path("type").asText()));
+        } finally {
+            for (Client player : players) player.session.close();
+        }
+    }
+
+    @Test
     void unknownGameIsA400WithTheErrorShape() {
         var response = http.postForEntity("/api/rooms", Map.of("gameId", "no-such-game"), JsonNode.class);
         assertEquals(400, response.getStatusCode().value());
@@ -148,7 +204,11 @@ class GatewayIntegrationTest {
     // ---- helpers ----
 
     private String createRoom() {
-        JsonNode created = http.postForObject("/api/rooms", Map.of("gameId", "high-card"), JsonNode.class);
+        return createRoom("high-card");
+    }
+
+    private String createRoom(String gameId) {
+        JsonNode created = http.postForObject("/api/rooms", Map.of("gameId", gameId), JsonNode.class);
         return created.path("room").asText();
     }
 

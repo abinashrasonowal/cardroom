@@ -5,8 +5,9 @@ import { Header } from '@/layout/Header';
 import { AboutModal } from '@/modals/AboutModal';
 import { SettingsModal } from '@/modals/SettingsModal';
 import { createRoom } from '@/network/api';
-import { HighCardTable } from '@/pages/games/high-card/HighCardTable';
+import { LiveTable } from '@/pages/games/live/LiveTable';
 import { GameTable } from '@/pages/games/offline/GameTable';
+import { JoinInvite } from '@/pages/lobby/JoinInvite';
 import { LobbyPage } from '@/pages/lobby/LobbyPage';
 import { GameKey, RoomRules, TableSettings } from '@/types/game';
 import { soundFx } from '@/utils/audio';
@@ -38,6 +39,8 @@ export default function App() {
 
   const { me, ensureMe } = useIdentity();
   const [live, setLive] = useState<{ room: string; nick: string } | null>(null);
+  /** A room code from an invite link, waiting for the visitor to say who they are. */
+  const [invite, setInvite] = useState<string | null>(null);
 
   const enterLive = (room: string, nick: string) => {
     saveNick(nick);
@@ -45,9 +48,9 @@ export default function App() {
     window.location.hash = room;
   };
 
-  const handleCreateLive = async (nick: string) => {
+  const handleCreateLive = async (gameId: string, nick: string) => {
     await ensureMe();
-    enterLive(await createRoom('high-card'), nick);
+    enterLive(await createRoom(gameId), nick);
   };
 
   // Check URL hash for direct room code join: a six-character server code (#K7M2QX) opens the
@@ -55,7 +58,7 @@ export default function App() {
   useEffect(() => {
     const hash = window.location.hash.replace('#', '').trim().toUpperCase();
     if (ROOM_CODE.test(hash)) {
-      setLive({ room: hash, nick: loadNick() });
+      setInvite(hash);
     } else if (hash && hash.length >= 4) {
       setActiveRoomCode(hash);
       if (hash.startsWith('SPD')) setActiveGameKey('spades');
@@ -111,6 +114,7 @@ export default function App() {
   const handleLeaveTable = () => {
     soundFx.playClick();
     setLive(null);
+    setInvite(null);
     setCurrentScreen('lobby');
     window.location.hash = '';
   };
@@ -124,7 +128,7 @@ export default function App() {
         onOpenAbout={() => setIsAboutOpen(true)}
         onOpenSettings={() => setIsSettingsOpen(true)}
         inGame={live != null || currentScreen === 'game'}
-        gameTitle={live ? 'HIGH CARD' : activeGameKey.toUpperCase()}
+        gameTitle={live ? 'LIVE ROOM' : activeGameKey.toUpperCase()}
         roomCode={live ? live.room : activeRoomCode}
         onLeaveGame={handleLeaveTable}
       />
@@ -133,7 +137,7 @@ export default function App() {
       <main className="w-full pt-28 pb-16 flex-1 flex flex-col">
         {live ? (
           me ? (
-            <HighCardTable
+            <LiveTable
               room={live.room}
               nick={live.nick}
               playerId={me.playerId}
@@ -144,6 +148,16 @@ export default function App() {
           ) : (
             <p className="text-center text-sm text-slate-600">Connecting to the cardroom server…</p>
           )
+        ) : invite ? (
+          <JoinInvite
+            room={invite}
+            initialNickname={loadNick()}
+            onJoin={(nick) => {
+              setInvite(null);
+              enterLive(invite, nick);
+            }}
+            onCancel={handleLeaveTable}
+          />
         ) : currentScreen === 'lobby' ? (
           <LobbyPage
             initialNickname={activePlayerName}

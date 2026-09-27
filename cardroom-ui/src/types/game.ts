@@ -25,9 +25,12 @@ export interface GameDefinition {
   tag: string;
   rulesOverview: string;
   defaultCode: string;
-  /** Played on cardroom-server; the room code is assigned when the room is created. */
-  live?: boolean;
-  /** House-rule toggles. A live game only shows the options its server module supports. */
+  /**
+   * The server module's id for a live game ("high-card", "hearts"). Set means the game runs on
+   * cardroom-server and its room code is assigned at launch; unset means an offline demo.
+   */
+  serverGameId?: string;
+  /** House-rule toggles for offline demos. Live games use the server module's fixed rules. */
   rule1?: string;
   rule2?: string;
   rule3?: string;

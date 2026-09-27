@@ -35,7 +35,7 @@ export const CreateRoomPanel: React.FC<CreateRoomPanelProps> = ({
 
   const handleLaunch = async () => {
     soundFx.playCardDeal();
-    if (!def.live) {
+    if (!def.serverGameId) {
       // Offline demo codes are fixed, so the invite link can be copied before launch.
       navigator.clipboard?.writeText(`${window.location.origin}/#${def.defaultCode}`).catch(() => {});
       setCopiedLinkNotice(true);
@@ -97,7 +97,7 @@ export const CreateRoomPanel: React.FC<CreateRoomPanelProps> = ({
         </div>
 
         {/* Room Rule Toggles */}
-        {def.rule1 && (
+        {!def.serverGameId && def.rule1 && (
         <div className="flex flex-col gap-1.5">
           <label className="text-xs text-slate-700 uppercase font-semibold">
             Room Rule Toggles
@@ -145,10 +145,10 @@ export const CreateRoomPanel: React.FC<CreateRoomPanelProps> = ({
               Room Code Preview:
             </span>
             <code className="text-sm font-mono-code text-blue-600 font-bold tracking-wider">
-              {def.live ? 'Assigned on launch' : def.defaultCode}
+              {def.serverGameId ? 'Assigned on launch' : def.defaultCode}
             </code>
           </div>
-          {!def.live && (
+          {!def.serverGameId && (
           <button
             type="button"
             onClick={handleCopyCode}
@@ -173,7 +173,7 @@ export const CreateRoomPanel: React.FC<CreateRoomPanelProps> = ({
 
         <div className="flex items-center justify-between text-xs text-slate-500 px-1">
           <span className="text-xs">
-            {def.live
+            {def.serverGameId
               ? 'Invite link on the table screen'
               : copiedLinkNotice
                 ? '✓ Link copied to clipboard!'

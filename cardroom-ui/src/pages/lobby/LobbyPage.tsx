@@ -9,8 +9,8 @@ import { QuickJoin } from './QuickJoin';
 interface LobbyPageProps {
   onStartGame: (gameKey: GameKey, playerName: string, roomCode: string, rules: RoomRules) => void;
   onJoinRoom: (roomCode: string, nickname: string) => void;
-  /** Opens a server-backed room for a `live` game. */
-  onCreateLive: (nickname: string) => Promise<void>;
+  /** Opens a server-backed room for a game with a `serverGameId`. */
+  onCreateLive: (serverGameId: string, nickname: string) => Promise<void>;
   initialNickname?: string;
 }
 
@@ -47,8 +47,8 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
 
   const handleLaunch = async () => {
     const name = hostName.trim() || 'Host';
-    if (activeDef.live) {
-      await onCreateLive(name);
+    if (activeDef.serverGameId) {
+      await onCreateLive(activeDef.serverGameId, name);
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, OFFLINE_LAUNCH_DELAY_MS));

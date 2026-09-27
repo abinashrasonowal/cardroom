@@ -77,6 +77,11 @@ public final class RoomActor implements Runnable, AutoCloseable {
         return room.code;
     }
 
+    /** Which game this room plays; fixed at creation. */
+    public String gameId() {
+        return room.gameId;
+    }
+
     public boolean isOpen() {
         return open;
     }

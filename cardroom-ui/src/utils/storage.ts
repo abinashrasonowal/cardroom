@@ -25,5 +25,6 @@ export const writeSession = (key: string, value: string) => write(() => sessionS
 const NICK_KEY = 'cardroom.nick';
 
 /** §4: the nickname is a label kept in localStorage, not part of identity. */
-export const loadNick = () => readLocal(NICK_KEY) || 'Guest';
+/** The name used last time on this browser, or '' if none. */
+export const loadNick = () => readLocal(NICK_KEY) ?? '';
 export const saveNick = (nick: string) => writeLocal(NICK_KEY, nick);

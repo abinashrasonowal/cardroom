@@ -44,9 +44,49 @@ export interface HcView {
   onClock: string | null;
 }
 
+/** games/hearts HeartsView. Other players' hands arrive only as `cardCount`. */
+export type HeartsPhase = 'PASSING' | 'PLAYING' | 'SCORING' | 'GAME_OVER';
+export type PassDirection = 'LEFT' | 'RIGHT' | 'ACROSS' | 'HOLD';
+
+export interface HeartsSeat {
+  index: number;
+  id: string;
+  nick: string;
+  cardCount: number;
+  handPoints: number;
+  score: number;
+  passed: boolean;
+}
+
+export interface HeartsPlay {
+  player: string;
+  card: WireCard;
+}
+
+export interface HeartsView {
+  phase: HeartsPhase;
+  hand: number;
+  passDirection: PassDirection;
+  heartsBroken: boolean;
+  tricksPlayed: number;
+  seats: HeartsSeat[];
+  myHand: WireCard[];
+  /** Cards you may pass or play right now, computed by the server; empty when it is not your move. */
+  legal: WireCard[];
+  trick: HeartsPlay[];
+  leader: string | null;
+  onClock: string | null;
+  lastTrick: HeartsPlay[];
+  lastTrickWinner: string | null;
+  /** One row per finished hand, points in seat order. */
+  history: number[][];
+  winner: string | null;
+}
+
+/** `game` is the server module id ("high-card", "hearts"); it picks the board that renders `view`. */
 type ViewFrame =
-  | { viewType: 'lobby'; view: LobbyView }
-  | { viewType: 'game'; view: unknown };
+  | { viewType: 'lobby'; game: string; view: LobbyView }
+  | { viewType: 'game'; game: string; view: unknown };
 
 export type ServerFrame =
   | ({ v: 1; type: 'update'; room: string } & ViewFrame)
