@@ -16,11 +16,14 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
-// The React build is bundled as static/. -PskipUi builds the jar without npm.
+// The React build is bundled as static/.
+//   -PskipUi      builds the jar with no UI at all (Java-only work, tests).
+//   -PprebuiltUi  bundles an existing cardroom-ui/dist without running npm (the Docker build,
+//                 where a Node stage has already produced it).
 if (!project.hasProperty("skipUi")) {
     val ui = project(":cardroom-ui")
     tasks.processResources {
-        dependsOn(ui.tasks.named("buildReact"))
+        if (!project.hasProperty("prebuiltUi")) dependsOn(ui.tasks.named("buildReact"))
         inputs.dir(ui.file("dist"))
         from(ui.file("dist")) { into("static") }
     }

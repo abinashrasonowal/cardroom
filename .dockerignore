@@ -1,0 +1,13 @@
+# Keep the build context small and the layer cache honest: nothing built locally goes in.
+.git
+.gradle
+.idea
+.vscode
+**/build
+**/node_modules
+cardroom-ui/dist
+graphify-out
+docs
+*.log
+.env
+.env.*

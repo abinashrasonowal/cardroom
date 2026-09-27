@@ -1,0 +1,17 @@
+# Local run:  docker compose up --build   →   http://localhost:8080
+#
+# Rooms live in memory (architecture §2), so a restart ends every game in progress. Run a
+# single replica: two containers would each hold half the rooms.
+services:
+  cardroom:
+    build: .
+    image: cardroom:latest
+    ports:
+      - "${CARDROOM_PORT:-8080}:8080"
+    environment:
+      # Signs the identity cookie. Set it so players keep their seats across restarts;
+      # left empty, the server makes a random one per boot and logs a warning.
+      CARDROOM_COOKIESECRET: ${CARDROOM_COOKIE_SECRET:-}
+      # Cross-origin WebSocket handshakes to allow (same-origin always works).
+      CARDROOM_ALLOWEDORIGINS: ${CARDROOM_ALLOWED_ORIGINS:-http://localhost:*}
+    restart: unless-stopped

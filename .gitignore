@@ -12,6 +12,8 @@
 
 # Package Files #
 *.jar
+# ...except the Gradle wrapper, which a fresh clone needs to run ./gradlew
+!gradle/wrapper/gradle-wrapper.jar
 *.war
 *.nar
 *.ear
