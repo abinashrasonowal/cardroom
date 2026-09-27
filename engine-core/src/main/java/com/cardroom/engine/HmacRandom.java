@@ -74,6 +74,15 @@ public final class HmacRandom implements RandomSource {
         return new HmacRandom(hmac(serverSeed, SeedCommit.utf8(msg.toString())));
     }
 
+    /**
+     * The gateway and the room check this at join time. Discovering a malformed seed later, at
+     * hand start, would throw on the room thread and kill a room full of people over one
+     * client's bad frame.
+     */
+    public static boolean isValidClientSeed(String seed) {
+        return seed != null && HEX_SEED.matcher(seed).matches();
+    }
+
     @Override
     public int nextInt(int bound) {
         if (bound <= 0) throw new IllegalArgumentException("bound must be positive: " + bound);
