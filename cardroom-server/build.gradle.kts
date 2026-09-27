@@ -11,6 +11,7 @@ dependencies {
     // Games reach the runtime classpath only; the compiler never sees one (§13).
     runtimeOnly(project(":games-high-card"))
     runtimeOnly(project(":games-hearts"))
+    runtimeOnly(project(":games-gin-rummy"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

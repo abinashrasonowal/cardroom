@@ -83,6 +83,62 @@ export interface HeartsView {
   winner: string | null;
 }
 
+/** games/gin-rummy GinView. Legal moves are spelled out, so the client (or a bot) never needs the rules. */
+export type GinPhase = 'DRAW' | 'DISCARD' | 'SCORING' | 'GAME_OVER';
+export type DrawSource = 'STOCK' | 'DISCARD';
+
+export interface GinArrangement {
+  melds: WireCard[][];
+  deadwood: WireCard[];
+  deadwoodPoints: number;
+}
+
+export interface GinRevealed {
+  player: string;
+  melds: WireCard[][];
+  deadwood: WireCard[];
+  laidOff: WireCard[];
+  deadwoodPoints: number;
+}
+
+export interface GinHandResult {
+  outcome: 'KNOCK' | 'GIN' | 'UNDERCUT' | 'DEAD';
+  knocker: string | null;
+  winner: string | null;
+  points: number;
+  hands: GinRevealed[];
+}
+
+export interface GinSeat {
+  index: number;
+  id: string;
+  nick: string;
+  cardCount: number;
+  score: number;
+}
+
+export interface GinView {
+  phase: GinPhase;
+  hand: number;
+  dealer: string;
+  onClock: string | null;
+  seats: GinSeat[];
+  myHand: WireCard[];
+  myMelds: GinArrangement | null;
+  stockCount: number;
+  discardTop: WireCard | null;
+  discardCount: number;
+  takenFromDiscard: WireCard | null;
+  /** Your legal moves right now; all empty when it is not your turn. */
+  drawSources: DrawSource[];
+  discards: WireCard[];
+  knockDiscards: WireCard[];
+  ginDiscards: WireCard[];
+  lastHand: GinHandResult | null;
+  history: number[][];
+  winner: string | null;
+}
+
 /** `game` is the server module id ("high-card", "hearts"); it picks the board that renders `view`. */
 type ViewFrame =
   | { viewType: 'lobby'; game: string; view: LobbyView }

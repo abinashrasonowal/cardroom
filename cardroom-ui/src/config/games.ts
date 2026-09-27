@@ -38,6 +38,22 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     rule2: 'Passing (Left · Right · Across · Hold)',
     rule3: 'Fast Game to 50 pts (Default 100)',
   },
+  gin_rummy: {
+    key: 'gin_rummy',
+    name: 'Gin Rummy',
+    shortName: 'Gin Rummy (2P)',
+    badge: 'Head to Head',
+    playerCountLabel: '2 Players',
+    playersCount: 2,
+    suitGlyph: '♦',
+    suitColor: 'text-red-600',
+    description: 'Draw, discard and build sets and runs. Knock at 10 or go gin.',
+    tag: 'Live · Server',
+    rulesOverview:
+      'Two players, 10 cards each. Each turn draw from the stock or the discard pile, then discard. Build sets (3–4 of a rank) and runs (3+ in suit, ace low). Knock with 10 or less deadwood; gin (no deadwood) scores 25 plus the opponent\'s deadwood. The defender lays off onto the knocker\'s melds, and undercuts for 25 plus the difference. First to 100 wins.',
+    defaultCode: '',
+    serverGameId: 'gin-rummy',
+  },
   spades: {
     key: 'spades',
     name: 'Spades',
@@ -116,6 +132,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
 export const DEFAULT_RULES: Record<GameKey, RoomRules> = {
   high_card: { rule1: false, rule2: false, rule3: false },
   hearts: { rule1: true, rule2: true, rule3: false },
+  gin_rummy: { rule1: false, rule2: false, rule3: false },
   spades: { rule1: true, rule2: true, rule3: true },
   euchre: { rule1: true, rule2: false, rule3: true },
   oh_hell: { rule1: true, rule2: true, rule3: true },

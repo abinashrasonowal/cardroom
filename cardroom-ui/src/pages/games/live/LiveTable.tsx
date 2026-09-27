@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { GAME_DEFINITIONS } from '@/config/games';
 import { useRoom } from '@/network/useRoom';
+import { GinRummyBoard } from '@/pages/games/gin-rummy/GinRummyBoard';
 import { HeartsBoard } from '@/pages/games/hearts/HeartsBoard';
 import { HighCardBoard } from '@/pages/games/high-card/HighCardBoard';
 import { TableSettings } from '@/types/game';
-import { HcView, HeartsView } from '@/types/wire';
+import { GinView, HcView, HeartsView } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
 import { WaitingRoom } from './WaitingRoom';
 
@@ -55,6 +56,9 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
   const board = () => {
     if (gameId === 'hearts') {
       return <HeartsBoard view={game as HeartsView} playerId={playerId} intent={intent} settings={settings} />;
+    }
+    if (gameId === 'gin-rummy') {
+      return <GinRummyBoard view={game as GinView} playerId={playerId} intent={intent} settings={settings} />;
     }
     if (gameId === 'high-card') {
       return (

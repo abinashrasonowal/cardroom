@@ -82,13 +82,15 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-            {games.map((def) => (
-              <GameCard
-                key={def.key}
-                def={def}
-                selected={def.key === selectedGameKey}
-                onSelect={() => handleSelectGame(def.key)}
-              />
+            {games.map((def, i) => (
+              // An odd card out spans both columns rather than leaving a hole in the grid.
+              <div key={def.key} className={games.length % 2 === 1 && i === games.length - 1 ? 'sm:col-span-2' : ''}>
+                <GameCard
+                  def={def}
+                  selected={def.key === selectedGameKey}
+                  onSelect={() => handleSelectGame(def.key)}
+                />
+              </div>
             ))}
           </div>
         </div>

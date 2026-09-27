@@ -8,7 +8,7 @@ export interface Card {
   value: number; // 2..14
 }
 
-export type GameKey = 'high_card' | 'hearts' | 'spades' | 'euchre' | 'oh_hell' | 'custom';
+export type GameKey = 'high_card' | 'hearts' | 'gin_rummy' | 'spades' | 'euchre' | 'oh_hell' | 'custom';
 
 export interface GameDefinition {
   key: GameKey;

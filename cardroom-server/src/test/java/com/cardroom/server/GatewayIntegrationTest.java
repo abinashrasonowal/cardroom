@@ -194,6 +194,39 @@ class GatewayIntegrationTest {
     }
 
     @Test
+    void ginRummyDealsTenPrivateCardsAndPlaysADrawThenDiscard() throws Exception {
+        String room = createRoom("gin-rummy");
+        alice = connect(cookies.mint());
+        bob = connect(cookies.mint());
+        alice.send("join", Map.of("room", room, "nick", "alice", "clientSeed", SEED));
+        alice.await(f -> isLobbyWith(f, 1));
+        bob.send("join", Map.of("room", room, "nick", "bob", "clientSeed", SEED));
+        alice.await(f -> isLobbyWith(f, 2));
+        alice.send("start", Map.of());
+
+        JsonNode aliceView = alice.await(f -> isGame(f)).path("view");
+        JsonNode bobFrame = bob.await(f -> isGame(f));
+        JsonNode bobView = bobFrame.path("view");
+        assertEquals("gin-rummy", bobFrame.path("game").asText());
+        assertEquals(10, aliceView.path("myHand").size());
+        assertEquals(10, bobView.path("myHand").size());
+        assertEquals(31, bobView.path("stockCount").asInt());
+        assertEquals(bob.playerId, bobView.path("onClock").asText(), "alice deals, so bob plays first");
+        assertEquals(2, bobView.path("drawSources").size());
+        assertEquals(0, aliceView.path("drawSources").size());
+
+        bob.send("intent", Map.of("type", "draw", "source", "stock"));
+        bob.await(f -> "accepted".equals(f.path("type").asText()));
+        JsonNode discarding = bob.await(f -> isGame(f) && "DISCARD".equals(f.at("/view/phase").asText())).path("view");
+        assertEquals(11, discarding.path("myHand").size());
+
+        bob.send("intent", Map.of("type", "discard", "card", discarding.path("discards").get(0), "knock", false));
+        bob.await(f -> "accepted".equals(f.path("type").asText()));
+        JsonNode aliceTurn = alice.await(f -> isGame(f) && alice.playerId.equals(f.at("/view/onClock").asText()));
+        assertEquals(discarding.path("discards").get(0), aliceTurn.at("/view/discardTop"));
+    }
+
+    @Test
     void unknownGameIsA400WithTheErrorShape() {
         var response = http.postForEntity("/api/rooms", Map.of("gameId", "no-such-game"), JsonNode.class);
         assertEquals(400, response.getStatusCode().value());
