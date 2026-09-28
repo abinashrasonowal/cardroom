@@ -1,4 +1,4 @@
-# Cardroom — Architecture
+# Whitejack — Architecture
 
 A room-based multiplayer card platform. One person creates a room, shares the code,
 everyone else joins and plays. No sign-up, no profile, no wallet.
@@ -459,7 +459,7 @@ deal *from the revealed seed* and matching it against what was broadcast at the 
 ## 13. Module layout
 
 ```text
-cardroom/
+whitejack/
 ├── engine-contract/        Intent · GameEvent · PlayerId · RoomCode · Seat · Turn
 │                           Validation · PlayerView · EngineContext · GameDefinition
 │                           RandomSource · Card · Rank · Suit · Deck · Hand · Shuffler
@@ -485,7 +485,7 @@ the compiler never sees it.
 compile cycle and leave games unable to reference a playing card.
 
 Providers must be `public` with a public no-arg constructor, declared in
-`META-INF/services/com.cardroom.contract.GameDefinition`.
+`META-INF/services/com.whitejack.contract.GameDefinition`.
 
 ---
 

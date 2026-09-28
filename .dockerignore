@@ -5,7 +5,7 @@
 .vscode
 **/build
 **/node_modules
-cardroom-ui/dist
+whitejack-ui/dist
 graphify-out
 docs
 *.log

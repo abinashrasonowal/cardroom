@@ -1,7 +1,7 @@
-rootProject.name = "cardroom"
+rootProject.name = "whitejack"
 
 include("engine-contract", "engine-core", "games-high-card", "games-hearts", "games-gin-rummy")
-include("cardroom-server", "cardroom-ui")
+include("whitejack-server", "whitejack-ui")
 
 // Flat project names, nested directories: no empty ":games" container project.
 project(":games-high-card").projectDir = file("games/high-card")

@@ -3,15 +3,15 @@
 # Rooms live in memory (architecture §2), so a restart ends every game in progress. Run a
 # single replica: two containers would each hold half the rooms.
 services:
-  cardroom:
+  whitejack:
     build: .
-    image: cardroom:latest
+    image: whitejack:latest
     ports:
-      - "${CARDROOM_PORT:-8080}:8080"
+      - "${WHITEJACK_PORT:-8080}:8080"
     environment:
       # Signs the identity cookie. Set it so players keep their seats across restarts;
       # left empty, the server makes a random one per boot and logs a warning.
-      CARDROOM_COOKIESECRET: ${CARDROOM_COOKIE_SECRET:-}
+      WHITEJACK_COOKIESECRET: ${WHITEJACK_COOKIE_SECRET:-}
       # Cross-origin WebSocket handshakes to allow (same-origin always works).
-      CARDROOM_ALLOWEDORIGINS: ${CARDROOM_ALLOWED_ORIGINS:-http://localhost:*}
+      WHITEJACK_ALLOWEDORIGINS: ${WHITEJACK_ALLOWED_ORIGINS:-http://localhost:*}
     restart: unless-stopped

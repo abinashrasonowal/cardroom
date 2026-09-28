@@ -1,8 +1,8 @@
-// cardroom-ui is an npm build driven by Exec tasks; it has no Java sources.
-configure(subprojects - project(":cardroom-ui")) {
+// whitejack-ui is an npm build driven by Exec tasks; it has no Java sources.
+configure(subprojects - project(":whitejack-ui")) {
     apply(plugin = "java-library")
 
-    group = "com.cardroom"
+    group = "com.whitejack"
 
     repositories { mavenCentral() }
 

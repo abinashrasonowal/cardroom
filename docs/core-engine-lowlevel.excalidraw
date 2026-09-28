@@ -29,13 +29,13 @@
    "updated": 1770000000000,
    "link": null,
    "locked": false,
-   "text": "Cardroom Core Engine \u2014 Low-Level Design (Java 21)",
+   "text": "Whitejack Core Engine \u2014 Low-Level Design (Java 21)",
    "fontSize": 30,
    "fontFamily": 2,
    "textAlign": "center",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "Cardroom Core Engine \u2014 Low-Level Design (Java 21)",
+   "originalText": "Whitejack Core Engine \u2014 Low-Level Design (Java 21)",
    "lineHeight": 1.25
   },
   {
@@ -2223,13 +2223,13 @@
    "updated": 1770000000000,
    "link": null,
    "locked": false,
-   "text": "META-INF/services/\n com.cardroom.contract.GameDefinition\n = com.cardroom.games.BlackjackGame",
+   "text": "META-INF/services/\n com.whitejack.contract.GameDefinition\n = com.whitejack.games.BlackjackGame",
    "fontSize": 11,
    "fontFamily": 3,
    "textAlign": "left",
    "verticalAlign": "top",
    "containerId": null,
-   "originalText": "META-INF/services/\n com.cardroom.contract.GameDefinition\n = com.cardroom.games.BlackjackGame",
+   "originalText": "META-INF/services/\n com.whitejack.contract.GameDefinition\n = com.whitejack.games.BlackjackGame",
    "lineHeight": 1.25
   },
   {
