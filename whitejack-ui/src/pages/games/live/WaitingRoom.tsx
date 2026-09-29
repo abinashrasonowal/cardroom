@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { BOT_NICK_SUFFIX, isBotNick } from '@/network/api';
 import { LobbyView } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
 
@@ -7,14 +8,39 @@ interface WaitingRoomProps {
   playerId: string;
   /** How many players the game needs before the host may start. */
   minPlayers: number;
+  /** Seats at the table; the host can add bots until it is full. */
+  maxPlayers: number;
   onStart: () => void;
+  onAddBot: () => Promise<unknown>;
 }
 
 /** Before the host starts: who is here, and the Start button. Same for every live game. */
-export const WaitingRoom: React.FC<WaitingRoomProps> = ({ lobby, playerId, minPlayers, onStart }) => {
+export const WaitingRoom: React.FC<WaitingRoomProps> = ({
+  lobby,
+  playerId,
+  minPlayers,
+  maxPlayers,
+  onStart,
+  onAddBot,
+}) => {
   const members = lobby?.members ?? [];
   const isHost = lobby?.host === playerId;
   const ready = members.length >= minPlayers;
+  const [adding, setAdding] = useState(false);
+  const [botError, setBotError] = useState<string | null>(null);
+
+  const addBot = async () => {
+    soundFx.playClick();
+    setAdding(true);
+    setBotError(null);
+    try {
+      await onAddBot();
+    } catch (e) {
+      setBotError(e instanceof Error ? e.message : 'Could not add a bot');
+    } finally {
+      setAdding(false);
+    }
+  };
 
   return (
     <section className="border border-slate-200 rounded-2xl p-6 flex flex-col gap-4">
@@ -29,7 +55,12 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({ lobby, playerId, minPl
           <li key={m.id} className="flex items-center justify-between py-2.5">
             <span className="flex items-center gap-2.5 text-sm text-slate-900">
               <span className={`w-2 h-2 rounded-full ${m.connected ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-              {m.nick}
+              {isBotNick(m.nick) ? m.nick.slice(0, -BOT_NICK_SUFFIX.length) : m.nick}
+              {isBotNick(m.nick) && (
+                <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700 bg-violet-50 border border-violet-200 rounded px-1.5 py-0.5">
+                  Jev bot
+                </span>
+              )}
               {m.id === playerId && <span className="text-xs text-slate-500">(you)</span>}
             </span>
             {m.id === lobby?.host && (
@@ -39,17 +70,30 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({ lobby, playerId, minPl
         ))}
       </ul>
       {isHost ? (
-        <button
-          type="button"
-          onClick={() => {
-            soundFx.playCardDeal();
-            onStart();
-          }}
-          disabled={!ready}
-          className="self-start h-11 px-6 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
-          {ready ? 'Start game' : `Need ${minPlayers} players (${members.length}/${minPlayers})`}
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            onClick={() => {
+              soundFx.playCardDeal();
+              onStart();
+            }}
+            disabled={!ready}
+            className="h-11 px-6 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            {ready ? 'Start game' : `Need ${minPlayers} players (${members.length}/${minPlayers})`}
+          </button>
+          {members.length < maxPlayers && (
+            <button
+              type="button"
+              onClick={addBot}
+              disabled={adding}
+              className="h-11 px-5 rounded-lg border border-violet-300 text-violet-700 text-xs font-bold uppercase tracking-wider hover:bg-violet-50 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
+              {adding ? 'Adding…' : '+ Add Jev bot'}
+            </button>
+          )}
+          {botError && <span className="text-xs text-red-700">{botError}</span>}
+        </div>
       ) : (
         <p className="text-sm text-slate-600">Waiting for the host to start…</p>
       )}

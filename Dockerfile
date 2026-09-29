@@ -24,6 +24,7 @@ COPY engine-core/build.gradle.kts engine-core/
 COPY games/high-card/build.gradle.kts games/high-card/
 COPY games/hearts/build.gradle.kts games/hearts/
 COPY games/gin-rummy/build.gradle.kts games/gin-rummy/
+COPY whitejack-bots/build.gradle.kts whitejack-bots/
 COPY whitejack-server/build.gradle.kts whitejack-server/
 COPY whitejack-ui/build.gradle.kts whitejack-ui/
 # Plain RUN, no BuildKit cache mount, so the file builds on the legacy builder too.
@@ -31,6 +32,7 @@ RUN gradle --no-daemon -q :whitejack-server:dependencies > /dev/null
 COPY engine-contract/ engine-contract/
 COPY engine-core/ engine-core/
 COPY games/ games/
+COPY whitejack-bots/ whitejack-bots/
 COPY whitejack-server/ whitejack-server/
 COPY --from=ui /ui/dist whitejack-ui/dist
 # Tests run in CI and on developer machines; the image build only packages.

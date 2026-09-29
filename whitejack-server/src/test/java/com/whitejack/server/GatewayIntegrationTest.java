@@ -183,7 +183,9 @@ class GatewayIntegrationTest {
             JsonNode playing = players.get(0).await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
             String onClock = playing.at("/view/onClock").asText();
             Client leader = players.stream().filter(p -> p.playerId.equals(onClock)).findFirst().orElseThrow();
-            JsonNode leaderView = leader.await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
+            // players.get(0) already consumed its PLAYING view just above; waiting again would hang.
+            JsonNode leaderView = leader == players.get(0) ? playing
+                    : leader.await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
             assertEquals("TWO", leaderView.at("/view/legal/0/rank").asText(), "the 2♣ holder leads, and only the 2♣");
 
             leader.send("intent", Map.of("type", "play", "card", leaderView.at("/view/legal/0")));

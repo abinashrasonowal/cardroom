@@ -2,6 +2,7 @@ package com.whitejack.server.exception;
 
 import com.whitejack.server.dto.ErrorResponse;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -12,9 +13,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class ApiExceptionHandler {
 
     @ExceptionHandler(InvalidRequestException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse invalid(InvalidRequestException e) {
-        return new ErrorResponse(e.code(), e.getMessage());
+    public ResponseEntity<ErrorResponse> invalid(InvalidRequestException e) {
+        return ResponseEntity.status(e.status()).body(new ErrorResponse(e.code(), e.getMessage()));
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)

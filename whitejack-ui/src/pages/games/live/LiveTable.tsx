@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { GAME_DEFINITIONS } from '@/config/games';
+import { addBot, listGames } from '@/network/api';
 import { useRoom } from '@/network/useRoom';
 import { GinRummyBoard } from '@/pages/games/gin-rummy/GinRummyBoard';
 import { HeartsBoard } from '@/pages/games/hearts/HeartsBoard';
@@ -34,6 +35,21 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
   const [copied, setCopied] = useState(false);
   const def = Object.values(GAME_DEFINITIONS).find((d) => d.serverGameId === gameId);
   const isHost = lobby?.host === playerId;
+  const [maxPlayers, setMaxPlayers] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!gameId) return;
+    let live = true;
+    listGames()
+      .then((games) => {
+        const info = games.find((g) => g.id === gameId);
+        if (live && info) setMaxPlayers(info.maxPlayers);
+      })
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [gameId]);
 
   const copyInvite = () => {
     navigator.clipboard?.writeText(`${window.location.origin}/#${room}`).catch(() => {});
@@ -135,7 +151,14 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
       {game ? (
         board()
       ) : (
-        <WaitingRoom lobby={lobby} playerId={playerId} minPlayers={def?.playersCount ?? 2} onStart={start} />
+        <WaitingRoom
+          lobby={lobby}
+          playerId={playerId}
+          minPlayers={def?.playersCount ?? 2}
+          maxPlayers={maxPlayers ?? def?.playersCount ?? 2}
+          onStart={start}
+          onAddBot={() => addBot(room)}
+        />
       )}
     </div>
   );
