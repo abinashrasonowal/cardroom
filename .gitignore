@@ -34,5 +34,5 @@ build/
 *.iml
 .vscode/
 
-# Local secrets (OpenRouter key for the bots); copy .env.templet to start one.
+# Local secrets (OpenRouter key for the bots); copy .env.template to start one.
 .env
