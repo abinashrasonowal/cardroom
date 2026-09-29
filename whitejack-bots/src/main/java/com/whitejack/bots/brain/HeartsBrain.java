@@ -57,11 +57,13 @@ public final class HeartsBrain implements GameBrain<HeartsView> {
                     .limit(3)
                     .toList();
             String state = describe(view, me) + "\nPass 3 cards " + view.passDirection() + ".";
-            return Optional.of(new Choice("pass:" + view.hand(), state, options, 3, highest, HeartsBrain::pass));
+            return Optional.of(new Choice("pass:" + view.hand(), state,
+                    "Which card is most important to pass away, to avoid taking points?", options, 3, highest, HeartsBrain::pass));
         }
         if ("PLAYING".equals(view.phase()) && me.equals(view.onClock())) {
             String key = "play:" + view.hand() + ":" + view.tricksPlayed() + ":" + orEmpty(view.trick()).size();
-            return Optional.of(new Choice(key, describe(view, me), options, 1, List.of(0),
+            return Optional.of(new Choice(key, describe(view, me),
+                    "Which card should you play to take the fewest points this hand?", options, 1, List.of(0),
                     picked -> Cards.NODES.objectNode().put("type", "play").set("card", picked.get(0).value())));
         }
         return Optional.empty();

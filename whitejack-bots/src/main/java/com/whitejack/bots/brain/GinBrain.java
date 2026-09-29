@@ -58,7 +58,8 @@ public final class GinBrain implements GameBrain<GinView> {
                         : "take the top discard " + view.discardTop();
                 options.add(new Move(label, Cards.NODES.objectNode().put("type", "draw").put("source", wire)));
             }
-            return Optional.of(Choice.single("draw:" + key, describe(view), options, stock));
+            return Optional.of(Choice.single("draw:" + key, describe(view),
+                    "Which draw gives you the best chance to complete melds and lower your deadwood?", options, stock));
         }
 
         List<Card> discards = orEmpty(view.discards());
@@ -71,7 +72,9 @@ public final class GinBrain implements GameBrain<GinView> {
                 if (gin.contains(card)) options.add(discard(card, true, "discard " + card + " and go gin"));
                 else if (knock.contains(card)) options.add(discard(card, true, "discard " + card + " and knock"));
             }
-            return Optional.of(Choice.single("discard:" + key, describe(view), options, fallback(view, options)));
+            return Optional.of(Choice.single("discard:" + key, describe(view),
+                    "Which is the strongest play? Knock or go gin when it wins the hand; otherwise shed the card you need least.",
+                    options, fallback(view, options)));
         }
         return Optional.empty();
     }

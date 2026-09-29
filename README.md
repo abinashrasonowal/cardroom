@@ -21,7 +21,8 @@ One image serves the React UI, the REST API and the `/ws` WebSocket from a singl
 | `WHITEJACK_COOKIESECRET` | Signs the player identity cookie. Set it, or every restart gives players new identities and a warning is logged. With Compose, export `WHITEJACK_COOKIE_SECRET` instead. |
 | `WHITEJACK_ALLOWEDORIGINS` | Extra origins allowed to open the WebSocket (same-origin always works). Default `http://localhost:*`. |
 | `WHITEJACK_BOTS_OPENROUTERAPIKEY` | OpenRouter API key for the bots' model. Unset, bots still play legal heuristic moves. With Compose, export `OPENROUTER_API_KEY` instead. |
-| `WHITEJACK_BOTS_MODEL` | OpenRouter model the bots consult (default `typesafe/jev-router`, TypeSafe's Jev). |
+| `WHITEJACK_BOTS_MODEL` | Decision model the bots consult (default `~typesafe/jev-latest`, TypeSafe's Jev). |
+| `WHITEJACK_BOTS_ENDPOINT` | Decisions endpoint (default OpenRouter's `https://openrouter.ai/api/alpha/decisions`; TypeSafe's own `https://api.typesafe.ai/v1/systemone` with model `jev-latest` also works). |
 | `WHITEJACK_BOTS_ENABLED` | `false` turns off `POST /api/rooms/{room}/bots` (default `true`). |
 | `WHITEJACK_PORT` | Compose only: host port to publish (default `8080`). |
 
@@ -32,10 +33,12 @@ second replica would not see the first one's rooms.
 
 The host can press **Add Jev bot** in a waiting room (or `POST /api/rooms/{room}/bots`) to fill a seat.
 A bot is an ordinary client: it gets a signed token and plays over `/ws` like a browser tab. On each
-turn it lists the legal moves the server's view already exposes, asks [Jev](https://openrouter.ai/~typesafe/jev-latest)
-to pick one by number, and sends that move. If the reply is late (`WHITEJACK_BOTS_TIMEOUT`, default
-`8s`), unparsable or out of range, it plays a built-in heuristic move instead. So a bot never sends a
-move the server has not already listed as legal.
+turn it lists the legal moves the server's view already exposes and asks
+[Jev](https://openrouter.ai/~typesafe/jev-latest), TypeSafe's decision model, a typed `choice` question
+whose options are exactly those moves. Jev returns a probability for each one, and the bot plays the best
+(for the three-card Hearts pass, the best three). If Jev is slow (`WHITEJACK_BOTS_TIMEOUT`, default `3s`)
+or unavailable, the bot plays a built-in heuristic move instead. So a bot never sends a move the server
+has not already listed as legal.
 
 ## Run locally
 

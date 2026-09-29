@@ -37,8 +37,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 /**
  * One person and bots at a real server: the bots join over the public socket, and a hand only
- * finishes if they keep answering with legal moves. The advisor is a stand-in that answers in
- * Jev's reply format, so the prompt-to-intent path runs without the network.
+ * finishes if they keep answering with legal moves. The advisor is a stand-in that ranks the
+ * last option highest, so the ranking-to-intent path runs without the network.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = "whitejack.bots.pace=0ms")
 class BotIntegrationTest {
@@ -50,13 +50,15 @@ class BotIntegrationTest {
     static class FakeJev {
         static final AtomicInteger ASKED = new AtomicInteger();
 
-        /** Always the first options: "MOVE: 1", or "MOVE: 1, 2, 3" when asked for several. */
+        /** Ranks later options higher, so it disagrees with most fallbacks (which favour index 0). */
         @Bean
         @Primary
         Advisor fakeJev() {
-            return (system, user) -> {
+            return (rules, choice) -> {
                 ASKED.incrementAndGet();
-                return Optional.of(user.contains("Pick 3") ? "MOVE: 1, 2, 3" : "Sure. MOVE: 1");
+                double[] ranking = new double[choice.options().size()];
+                for (int i = 0; i < ranking.length; i++) ranking[i] = i;
+                return Optional.of(ranking);
             };
         }
     }

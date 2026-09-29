@@ -1,28 +1,31 @@
 package com.whitejack.bots;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 
 /**
  * A decision the bot owes the table right now: pick {@code picks} distinct options.
  *
  * <p>This is what makes a bot unable to cheat or blunder into a reject: the advisor only ever
- * returns indices into {@code options}, every option was read off the server's own legal-move
- * lists, and {@code fallback} is a valid pick when the advisor has nothing useful to say.
+ * ranks {@code options}, every option was read off the server's own legal-move lists, and {@code fallback} is a valid pick when the advisor has nothing useful to say.
  *
  * @param key identifies the decision point, so the same view arriving twice is not acted on twice
- * @param state the position in words, for the prompt
+ * @param state the position in words, for the advisor
+ * @param question what is being decided, for the advisor
  * @param assemble turns the picked options into the intent payload
  */
-public record Choice(String key, String state, List<Move> options, int picks, List<Integer> fallback,
+public record Choice(String key, String state, String question, List<Move> options, int picks, List<Integer> fallback,
         Function<List<Move>, JsonNode> assemble) {
 
     public Choice {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(state, "state");
+        Objects.requireNonNull(question, "question");
         options = List.copyOf(options);
         fallback = List.copyOf(fallback);
         Objects.requireNonNull(assemble, "assemble");
@@ -35,13 +38,22 @@ public record Choice(String key, String state, List<Move> options, int picks, Li
     }
 
     /** A single-option decision whose intent is the option itself. */
-    public static Choice single(String key, String state, List<Move> options, int fallback) {
-        return new Choice(key, state, options, 1, List.of(fallback), picked -> picked.get(0).value());
+    public static Choice single(String key, String state, String question, List<Move> options, int fallback) {
+        return new Choice(key, state, question, options, 1, List.of(fallback), picked -> picked.get(0).value());
     }
 
     /** Nothing to ask when there is only one way to do it. */
     public boolean isForced() {
         return options.size() == picks;
+    }
+
+    /** The {@code picks} best-ranked options, best first; ties go to the lower index. */
+    public List<Integer> best(double[] ranking) {
+        if (ranking.length != options.size()) throw new IllegalArgumentException("ranking covers " + ranking.length + " options");
+        return IntStream.range(0, ranking.length).boxed()
+                .sorted(Comparator.comparingDouble((Integer i) -> ranking[i]).reversed())
+                .limit(picks)
+                .toList();
     }
 
     public JsonNode intent(List<Integer> indices) {

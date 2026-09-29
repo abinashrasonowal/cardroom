@@ -29,7 +29,7 @@ public final class HighCardBrain implements GameBrain<HcView> {
     public Optional<Choice> choose(HcView view, String me) {
         if (view.handComplete() || !me.equals(view.onClock())) return Optional.empty();
         Move draw = new Move("draw a card", Cards.NODES.objectNode().put("type", "draw"));
-        return Optional.of(Choice.single("draw", "Your turn to draw.", List.of(draw), 0));
+        return Optional.of(Choice.single("draw", "Your turn to draw.", "Draw?", List.of(draw), 0));
     }
 
     /** High card deals no second hand, so a finished hand is the end of the bot's work. */

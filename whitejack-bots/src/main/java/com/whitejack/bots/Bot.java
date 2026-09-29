@@ -317,12 +317,9 @@ public final class Bot implements AutoCloseable {
     private List<Integer> pick(String gameId, Choice choice) {
         if (choice.isForced()) return choice.fallback();
         String rules = Brains.forGame(gameId).map(GameBrain::rules).orElse("");
-        Optional<String> reply = config.advisor().ask(Prompts.system(rules, choice.picks()), Prompts.user(choice));
-        Optional<List<Integer>> parsed = reply.flatMap(text -> Prompts.parse(text, choice));
-        if (reply.isPresent() && parsed.isEmpty()) {
-            LOG.log(System.Logger.Level.INFO, "{0}: unusable advice {1}, playing the fallback", config.nick(), reply.get());
-        }
-        return parsed.orElse(choice.fallback());
+        Optional<double[]> ranking = config.advisor().rank(rules, choice);
+        if (ranking.isEmpty() || ranking.get().length != choice.options().size()) return choice.fallback();
+        return choice.best(ranking.get());
     }
 
     private void waitForPace(Seen seen) {
