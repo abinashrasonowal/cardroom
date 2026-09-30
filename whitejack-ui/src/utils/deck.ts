@@ -1,6 +1,6 @@
 import { Card, GameKey, PlayedCard, Rank, Suit } from '@/types/game';
 
-export const SUITS: Suit[] = ['clubs', 'diamonds', 'spades', 'hearts'];
+export const SUITS: Suit[] = ['spades', 'diamonds', 'clubs', 'hearts'];
 export const RANKS: Rank[] = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
 export const SUIT_SYMBOLS: Record<Suit, string> = {
@@ -67,9 +67,9 @@ export function shuffleDeck(deck: Card[]): Card[] {
   return arr;
 }
 
-// Sort cards by suit order (Clubs, Diamonds, Spades, Hearts) then rank ascending
+// Sort cards by suit order (Spades, Diamonds, Clubs, Hearts) then rank ascending
 export function sortCards(cards: Card[], sortBy: 'suit' | 'rank' = 'suit'): Card[] {
-  const suitOrder: Record<Suit, number> = { clubs: 0, diamonds: 1, spades: 2, hearts: 3 };
+  const suitOrder: Record<Suit, number> = { spades: 0, diamonds: 1, clubs: 2, hearts: 3 };
 
   return [...cards].sort((a, b) => {
     if (sortBy === 'suit') {

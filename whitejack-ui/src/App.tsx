@@ -131,6 +131,7 @@ export default function App() {
         gameTitle={live ? 'LIVE ROOM' : activeGameKey.toUpperCase()}
         roomCode={live ? live.room : activeRoomCode}
         onLeaveGame={handleLeaveTable}
+        liveRoom={live != null}
       />
 
       {/* Main Content Area */}

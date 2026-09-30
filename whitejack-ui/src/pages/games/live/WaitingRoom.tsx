@@ -4,6 +4,9 @@ import { LobbyView } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
 
 interface WaitingRoomProps {
+  room: string;
+  copied: boolean;
+  onCopyInvite: () => void;
   lobby: LobbyView | null;
   playerId: string;
   /** How many players the game needs before the host may start. */
@@ -16,6 +19,9 @@ interface WaitingRoomProps {
 
 /** Before the host starts: who is here, and the Start button. Same for every live game. */
 export const WaitingRoom: React.FC<WaitingRoomProps> = ({
+  room,
+  copied,
+  onCopyInvite,
   lobby,
   playerId,
   minPlayers,
@@ -49,6 +55,21 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
         <span className="text-xs font-semibold text-slate-500">
           {members.length}/{minPlayers} players
         </span>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-violet-50 border border-violet-100 px-4 py-3">
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-violet-600">Invite friends</span>
+          <code className="font-mono-code text-sm text-slate-800 truncate">
+            {window.location.host}/#{room}
+          </code>
+        </div>
+        <button
+          type="button"
+          onClick={onCopyInvite}
+          className="h-9 px-4 rounded-lg bg-violet-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-violet-700 cursor-pointer"
+        >
+          {copied ? '✓ Copied' : 'Copy link'}
+        </button>
       </div>
       <ul className="flex flex-col divide-y divide-slate-100">
         {members.map((m) => (

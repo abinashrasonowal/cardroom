@@ -8,7 +8,7 @@ export interface Card {
   value: number; // 2..14
 }
 
-export type GameKey = 'high_card' | 'hearts' | 'gin_rummy' | 'spades' | 'euchre' | 'oh_hell' | 'custom';
+export type GameKey = 'poker' | 'hearts' | 'gin_rummy' | 'spades' | 'euchre' | 'oh_hell' | 'custom';
 
 export type GameAccent = 'blue' | 'rose' | 'amber' | 'emerald' | 'violet' | 'orange' | 'slate';
 
@@ -34,7 +34,7 @@ export interface GameDefinition {
   special?: string;
   defaultCode: string;
   /**
-   * The server module's id for a live game ("high-card", "hearts"). Set means the game runs on
+   * The server module's id for a live game ("poker", "hearts"). Set means the game runs on
    * whitejack-server and its room code is assigned at launch; unset means an offline demo.
    */
   serverGameId?: string;

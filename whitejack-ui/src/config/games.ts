@@ -2,11 +2,10 @@ import { GameDefinition, GameKey, RoomRules } from '@/types/game';
 
 /** Every game the lobby offers. `live` games run on whitejack-server; the rest are offline demos. */
 export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
-  high_card: {
-    key: 'high_card',
-    icon: 'A♠',
-    name: 'High Card',
-    shortName: 'High Card (2–8P)',
+  poker: {
+    key: 'poker',
+    name: 'Poker',
+    shortName: 'Poker (2–8P)',
     badge: '2–8 Players',
     playerCountLabel: '2–8 Players',
     playersCount: 2,
@@ -14,13 +13,14 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     suitColor: 'text-slate-900',
     accent: 'blue',
     description:
-      'Everyone draws a single card — highest rank takes the hand, ties broken by suit. The quickest way to settle anything.',
+      'No-limit Texas Hold’em. Two hole cards, five on the board — bet, bluff and shove until one player holds every chip.',
     tag: 'Live · Server',
     rulesOverview:
-      'Players draw one card each in seat order, 15 seconds per turn. Highest rank wins; a tied rank is broken by suit (♠ > ♥ > ♦ > ♣). Cards stay hidden from everyone else until the last player has drawn.',
-    special: 'Suit Tiebreak',
+      'Everyone starts with 1,000 chips; blinds start at 10/20 and double every 10 hands. Each player gets two private cards, then the flop (3), turn and river come out with a betting round before each and after the last. Fold, check, call or raise — no limit. Best five-card hand from your two cards and the board wins; side pots handle all-ins. Last player with chips wins.',
+    targetScore: 'All chips',
+    special: 'No Limit',
     defaultCode: '',
-    serverGameId: 'high-card',
+    serverGameId: 'poker',
   },
   hearts: {
     key: 'hearts',
@@ -157,7 +157,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
 
 /** Initial house-rule toggles per game, before the host changes any. */
 export const DEFAULT_RULES: Record<GameKey, RoomRules> = {
-  high_card: { rule1: false, rule2: false, rule3: false },
+  poker: { rule1: false, rule2: false, rule3: false },
   hearts: { rule1: true, rule2: true, rule3: false },
   gin_rummy: { rule1: false, rule2: false, rule3: false },
   spades: { rule1: true, rule2: true, rule3: true },

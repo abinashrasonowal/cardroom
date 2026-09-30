@@ -28,22 +28,6 @@ export interface WireCard {
   suit: WireSuit;
 }
 
-/** games/high-card HcView. A null card means "not yours, and not revealed yet". */
-export interface HcSeat {
-  index: number;
-  id: string;
-  nick: string;
-  hasDrawn: boolean;
-  card: WireCard | null;
-}
-
-export interface HcView {
-  seats: HcSeat[];
-  handComplete: boolean;
-  winner: string | null;
-  onClock: string | null;
-}
-
 /** games/hearts HeartsView. Other players' hands arrive only as `cardCount`. */
 export type HeartsPhase = 'PASSING' | 'PLAYING' | 'SCORING' | 'GAME_OVER';
 export type PassDirection = 'LEFT' | 'RIGHT' | 'ACROSS' | 'HOLD';
@@ -139,7 +123,7 @@ export interface GinView {
   winner: string | null;
 }
 
-/** `game` is the server module id ("high-card", "hearts"); it picks the board that renders `view`. */
+/** `game` is the server module id ("poker", "hearts"); it picks the board that renders `view`. */
 type ViewFrame =
   | { viewType: 'lobby'; game: string; view: LobbyView }
   | { viewType: 'game'; game: string; view: unknown };
@@ -150,3 +134,65 @@ export type ServerFrame =
   | { v: 1; type: 'accepted'; re: string; seq: number }
   | { v: 1; type: 'rejected'; re: string | null; error: string; detail: string }
   | { v: 1; type: 'fault'; room: string; detail: string };
+
+/** games/poker PokerView. Other players' hole cards appear only in `lastHand`, after a showdown. */
+export type PokerPhase = 'BETTING' | 'SETTLED' | 'GAME_OVER';
+export type PokerStreet = 'PREFLOP' | 'FLOP' | 'TURN' | 'RIVER';
+export type PokerMove = 'fold' | 'check' | 'call' | 'raise';
+
+export interface PokerSeat {
+  index: number;
+  id: string;
+  nick: string;
+  stack: number;
+  /** Chips put in on the current street. */
+  bet: number;
+  /** Dealt into this hand; a player with no chips sits out. */
+  inHand: boolean;
+  folded: boolean;
+  allIn: boolean;
+  lastAction: string | null;
+}
+
+export interface PokerPot {
+  amount: number;
+  winners: string[];
+  /** Null when everyone else folded. */
+  handName: string | null;
+}
+
+export interface PokerReveal {
+  player: string;
+  cards: WireCard[];
+  handName: string;
+  best: WireCard[];
+}
+
+export interface PokerHandResult {
+  hand: number;
+  board: WireCard[];
+  reveals: PokerReveal[];
+  pots: PokerPot[];
+}
+
+export interface PokerView {
+  phase: PokerPhase;
+  street: PokerStreet;
+  hand: number;
+  smallBlind: number;
+  bigBlind: number;
+  dealer: string;
+  seats: PokerSeat[];
+  myCards: WireCard[];
+  board: WireCard[];
+  pot: number;
+  currentBet: number;
+  onClock: string | null;
+  /** Moves the viewer may make now; empty when it is not their move. */
+  legal: PokerMove[];
+  toCall: number;
+  minRaiseTo: number;
+  maxRaiseTo: number;
+  lastHand: PokerHandResult | null;
+  winner: string | null;
+}

@@ -13,6 +13,7 @@ dependencies {
     runtimeOnly(project(":games-high-card"))
     runtimeOnly(project(":games-hearts"))
     runtimeOnly(project(":games-gin-rummy"))
+    runtimeOnly(project(":games-poker"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

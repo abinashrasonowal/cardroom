@@ -1,5 +1,5 @@
 import { Card, Rank, Suit } from '@/types/game';
-import { WireCard, WireRank } from '@/types/wire';
+import { WireCard, WireRank, WireSuit } from '@/types/wire';
 
 const RANKS: Record<WireRank, [Rank, number]> = {
   TWO: ['2', 2], THREE: ['3', 3], FOUR: ['4', 4], FIVE: ['5', 5], SIX: ['6', 6],
@@ -12,6 +12,15 @@ export function toUiCard(card: WireCard): Card {
   const [rank, value] = RANKS[card.rank];
   const suit = card.suit.toLowerCase() as Suit;
   return { id: `${rank}-${suit}`, rank, suit, value };
+}
+
+const SUIT_ORDER: Record<WireSuit, number> = { SPADES: 0, DIAMONDS: 1, CLUBS: 2, HEARTS: 3 };
+
+/** A hand laid out left to right: spades, diamonds, clubs, hearts, each low to high. */
+export function sortHand(cards: WireCard[]): WireCard[] {
+  return [...cards].sort(
+    (a, b) => SUIT_ORDER[a.suit] - SUIT_ORDER[b.suit] || RANKS[a.rank][1] - RANKS[b.rank][1]
+  );
 }
 
 /** Crockford base32, six characters — RoomRegistry's alphabet. */

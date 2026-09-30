@@ -10,9 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.whitejack.bots.brain.GinBrain;
 import com.whitejack.bots.brain.HeartsBrain;
 import com.whitejack.bots.brain.HighCardBrain;
+import com.whitejack.bots.brain.PokerBrain;
 import com.whitejack.bots.view.GinView;
 import com.whitejack.bots.view.HcView;
 import com.whitejack.bots.view.HeartsView;
+import com.whitejack.bots.view.PokerView;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -104,8 +106,34 @@ class BrainsTest {
     }
 
     @Test
+    void pokerOffersOnlyTheListedMovesAndFoldsJunkToABigBet() throws Exception {
+        PokerBrain brain = new PokerBrain();
+        String seats = "'seats':[{'index':0,'id':'me','nick':'me','stack':900,'bet':20,'inHand':true},"
+                + "{'index':1,'id':'jo','nick':'jo','stack':800,'bet':200,'inHand':true}]";
+        String base = "{'phase':'BETTING','street':'PREFLOP','hand':3,'smallBlind':10,'bigBlind':20,'dealer':'jo',"
+                + seats + ",'board':[],'pot':220,'currentBet':200,'onClock':'me','toCall':180,";
+
+        PokerView junk = view(base + "'myCards':[" + card("SEVEN", "CLUBS") + "," + card("TWO", "DIAMONDS") + "],"
+                + "'legal':['fold','call','raise'],'minRaiseTo':380,'maxRaiseTo':920}", PokerView.class);
+        Choice choice = brain.choose(junk, "me").orElseThrow();
+        List<String> labels = choice.options().stream().map(Move::label).toList();
+        assertEquals(List.of("fold", "call 180", "raise to 380", "raise to 600", "all-in (raise to 920)"), labels);
+        assertEquals("fold", choice.intent(choice.fallback()).path("type").asText());
+        assertEquals(920, choice.intent(List.of(4)).path("to").asInt());
+
+        PokerView aces = view(base + "'myCards':[" + card("ACE", "CLUBS") + "," + card("ACE", "DIAMONDS") + "],"
+                + "'legal':['fold','call'],'minRaiseTo':0,'maxRaiseTo':0}", PokerView.class);
+        Choice call = brain.choose(aces, "me").orElseThrow();
+        assertEquals(2, call.options().size(), "no raise sizes when raising is not listed");
+        assertEquals("call", call.intent(call.fallback()).path("type").asText());
+
+        PokerView waiting = view(base.replace("'onClock':'me'", "'onClock':'jo'") + "'myCards':[],'legal':[]}", PokerView.class);
+        assertTrue(brain.choose(waiting, "me").isEmpty());
+    }
+
+    @Test
     void everyGameTheServerShipsHasABrain() {
-        for (String game : List.of("high-card", "hearts", "gin-rummy")) {
+        for (String game : List.of("high-card", "hearts", "gin-rummy", "poker")) {
             assertTrue(Brains.forGame(game).isPresent(), game);
         }
     }

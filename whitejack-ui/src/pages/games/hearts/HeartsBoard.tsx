@@ -3,7 +3,7 @@ import { CardView } from '@/components/CardView';
 import { TableSettings } from '@/types/game';
 import { HeartsPlay, HeartsSeat, HeartsView, WireCard } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
-import { toUiCard } from '@/utils/cards';
+import { sortHand, toUiCard } from '@/utils/cards';
 
 interface HeartsBoardProps {
   view: HeartsView;
@@ -77,169 +77,178 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
     return myTurn ? 'Your turn — play a highlighted card' : `Waiting on ${nickOf(view.onClock)}`;
   };
 
+  const statusActive = myTurn || (canPass && !me?.passed);
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Status bar */}
-      <section className="border border-slate-200 rounded-2xl px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
-          <span className="text-slate-300">•</span>
-          <span className="text-slate-700">
-            {passing ? `Passing ${DIRECTION_LABEL[view.passDirection]}` : `Trick ${Math.min(view.tricksPlayed + 1, 13)} / 13`}
-          </span>
-          {view.passDirection === 'HOLD' && !passing && view.phase === 'PLAYING' && (
-            <span className="text-xs text-slate-500">(hold hand — no passing)</span>
-          )}
-          {view.heartsBroken && (
-            <span className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
-              ♥ Hearts broken
-            </span>
-          )}
-        </div>
-        <span className={`text-sm font-semibold ${myTurn || (canPass && !me?.passed) ? 'text-blue-700' : 'text-slate-600'}`}>
-          {status()}
-        </span>
-      </section>
+    // Fills the viewport between navbar and footer on wide screens: table and hand on the left,
+    // status and scores on the right.
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem] items-start">
+      <div className="flex flex-col gap-4 min-w-0 lg:min-h-[calc(100dvh-15rem)]">
+        {/* Table: all four seats round the trick */}
+        <section className="flex-1 rounded-2xl bg-slate-900 p-3 sm:p-5 grid grid-cols-[1fr_auto_1fr] grid-rows-[auto_1fr_auto] items-center gap-3">
+          <div className="col-start-2 row-start-1 justify-self-center">
+            <SeatBadge seat={seatAt('top')} view={view} />
+          </div>
+          {/* On phones the three opponents sit in one row above the trick; wider, they surround it. */}
+          <div className="col-start-1 row-start-1 sm:row-start-2 justify-self-start">
+            <SeatBadge seat={seatAt('left')} view={view} />
+          </div>
+          <div className="col-start-3 row-start-1 sm:row-start-2 justify-self-end">
+            <SeatBadge seat={seatAt('right')} view={view} />
+          </div>
 
-      {view.phase === 'GAME_OVER' && (
-        <section className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-lg font-bold font-space text-slate-950">
-          🏆 {nickOf(view.winner)} wins with {view.seats.find((s) => s.id === view.winner)?.score} points
-        </section>
-      )}
-
-      {/* Table */}
-      <section className="rounded-2xl bg-slate-900 p-4 sm:p-6 grid grid-cols-[1fr_auto_1fr] grid-rows-[auto_auto_auto] gap-4 items-center">
-        <div className="col-start-2 row-start-1 justify-self-center">
-          <SeatBadge seat={seatAt('top')} view={view} playerId={playerId} />
-        </div>
-        <div className="col-start-1 row-start-2 justify-self-start">
-          <SeatBadge seat={seatAt('left')} view={view} playerId={playerId} />
-        </div>
-        <div className="col-start-3 row-start-2 justify-self-end">
-          <SeatBadge seat={seatAt('right')} view={view} playerId={playerId} />
-        </div>
-
-        <div className="col-start-2 row-start-2 relative w-64 h-64 sm:w-72 sm:h-72 rounded-full bg-slate-800/70 border border-slate-700">
-          {tablePlays.map((play) => (
-            <div
-              key={cardKey(play.card)}
-              className={`absolute ${TRICK_POSITION[spotOf(play.player)]} ${showingLast ? 'opacity-50' : ''}`}
-            >
-              <CardView card={toUiCard(play.card)} cardBack={settings.cardBack} fourColor={settings.fourColorDeck} />
-            </div>
-          ))}
-          {showingLast && (
-            <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xs font-semibold text-white">
-              won by {view.lastTrickWinner === playerId ? 'you' : nickOf(view.lastTrickWinner)}
-            </span>
-          )}
-        </div>
-
-        <div className="col-start-2 row-start-3 justify-self-center">
-          <SeatBadge seat={seatAt('bottom')} view={view} playerId={playerId} />
-        </div>
-      </section>
-
-      {/* My hand */}
-      <section className="border border-slate-200 rounded-2xl p-5 flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="font-bold font-space text-slate-950">Your hand</span>
-          {canPass && (
-            <button
-              type="button"
-              onClick={handlePass}
-              disabled={selected.length !== 3}
-              className="h-10 px-5 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-            >
-              Pass {selected.length}/3 {DIRECTION_LABEL[view.passDirection]}
-            </button>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          {view.myHand.map((card) => {
-            const clickable = canPass || (myTurn && isLegal(card));
-            return (
-              <CardView
-                key={cardKey(card)}
-                card={toUiCard(card)}
-                selected={isSelected(card)}
-                disabled={myTurn && !isLegal(card)}
-                onClick={clickable ? () => handleCardClick(card) : undefined}
-                cardBack={settings.cardBack}
-                fourColor={settings.fourColorDeck}
-              />
-            );
-          })}
-          {view.myHand.length === 0 && <span className="text-sm text-slate-500">No cards.</span>}
-        </div>
-      </section>
-
-      {/* Scores */}
-      <section className="border border-slate-200 rounded-2xl p-5 overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr className="text-xs uppercase text-slate-500">
-              <th className="py-2 pr-3 font-semibold">Hand</th>
-              {view.seats.map((s) => (
-                <th key={s.id} className={`py-2 px-2 text-center font-semibold ${s.id === playerId ? 'text-blue-700' : ''}`}>
-                  {s.nick}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 font-mono-code">
-            {view.history.map((row, i) => (
-              <tr key={i}>
-                <td className="py-1.5 pr-3 text-slate-500">{i + 1}</td>
-                {row.map((points, j) => (
-                  <td key={j} className="py-1.5 px-2 text-center">
-                    {points}
-                  </td>
-                ))}
-              </tr>
+          <div className="col-span-3 sm:col-span-1 sm:col-start-2 row-start-2 justify-self-center relative w-56 h-60 sm:w-72 sm:h-68 md:h-72 rounded-2xl bg-slate-800/60 border border-slate-700/70">
+            {tablePlays.map((play) => (
+              <div
+                key={cardKey(play.card)}
+                className={`absolute ${TRICK_POSITION[spotOf(play.player)]} ${showingLast ? 'opacity-50' : ''}`}
+              >
+                <CardView card={toUiCard(play.card)} cardBack={settings.cardBack} fourColor={settings.fourColorDeck} />
+              </div>
             ))}
-            <tr className="font-bold">
-              <td className="py-2 pr-3 text-slate-700">Total</td>
-              {view.seats.map((s) => (
-                <td key={s.id} className="py-2 px-2 text-center">
-                  {s.score}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      </section>
+            {showingLast && (
+              <span className="absolute inset-x-0 top-1/2 -translate-y-1/2 text-center text-xs font-semibold text-white">
+                won by {view.lastTrickWinner === playerId ? 'you' : nickOf(view.lastTrickWinner)}
+              </span>
+            )}
+          </div>
+
+          <div className="col-span-3 row-start-3 justify-self-center">
+            <SeatBadge seat={me} view={view} you />
+          </div>
+        </section>
+
+        {/* Your cards */}
+        <section
+          className={`rounded-2xl border px-3 sm:px-5 pt-3 pb-4 flex flex-col gap-1 bg-slate-900 ${
+            statusActive ? 'border-blue-400 ring-2 ring-blue-400/60' : 'border-slate-900'
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 min-h-9">
+            <span className="text-sm font-semibold text-white">Your hand</span>
+            {canPass && (
+              <button
+                type="button"
+                onClick={handlePass}
+                disabled={selected.length !== 3}
+                className="h-9 px-4 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              >
+                Pass {selected.length}/3 {DIRECTION_LABEL[view.passDirection]}
+              </button>
+            )}
+          </div>
+          {/* Overlapped like a held fan; the top padding leaves room for a picked card to lift. */}
+          <div className="flex justify-center pt-5 overflow-x-auto">
+            {sortHand(view.myHand).map((card) => {
+              const clickable = canPass || (myTurn && isLegal(card));
+              return (
+                <CardView
+                  key={cardKey(card)}
+                  card={toUiCard(card)}
+                  selected={isSelected(card)}
+                  disabled={myTurn && !isLegal(card)}
+                  onClick={clickable ? () => handleCardClick(card) : undefined}
+                  cardBack={settings.cardBack}
+                  fourColor={settings.fourColorDeck}
+                  className="-ml-11 sm:-ml-8 lg:-ml-9 xl:-ml-4 first:ml-0"
+                />
+              );
+            })}
+            {view.myHand.length === 0 && <span className="text-sm text-slate-400 py-8">No cards.</span>}
+          </div>
+        </section>
+      </div>
+
+      {/* Sidebar: where the hand stands, then the scores */}
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-28">
+        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
+            <span className="text-slate-600">
+              {passing ? `Passing ${DIRECTION_LABEL[view.passDirection]}` : `Trick ${Math.min(view.tricksPlayed + 1, 13)} / 13`}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {view.passDirection === 'HOLD' && view.phase === 'PLAYING' && (
+              <span className="text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                Hold hand — no passing
+              </span>
+            )}
+            {view.heartsBroken && (
+              <span className="text-xs font-semibold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                ♥ Hearts broken
+              </span>
+            )}
+          </div>
+          <p
+            className={`text-sm font-semibold rounded-lg px-3 py-2 ${
+              statusActive ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600'
+            }`}
+          >
+            {status()}
+          </p>
+        </section>
+
+        {view.phase === 'GAME_OVER' && (
+          <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 font-bold font-space text-slate-950">
+            🏆 {nickOf(view.winner)} wins with {view.seats.find((s) => s.id === view.winner)?.score} points
+          </section>
+        )}
+
+        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-2">
+          <h3 className="font-bold font-space text-slate-950">Scores</h3>
+          {/* One row per player, so four names never overflow the sidebar however many hands are played. */}
+          <ul className="flex flex-col divide-y divide-slate-100">
+            {view.seats.map((s, j) => (
+              <li key={s.id} className="py-2 flex items-center justify-between gap-3">
+                <div className="flex flex-col min-w-0">
+                  <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-blue-700' : 'text-slate-900'}`}>
+                    {s.nick}
+                    {s.id === playerId && <span className="text-xs font-normal text-slate-500"> (you)</span>}
+                  </span>
+                  {view.history.length > 0 && (
+                    <span className="text-xs text-slate-500 font-mono-code truncate">
+                      {view.history.map((row) => row[j]).join(' · ')}
+                    </span>
+                  )}
+                </div>
+                <span className="text-lg font-bold font-mono-code text-slate-950">{s.score}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      </aside>
     </div>
   );
 };
 
 const TRICK_POSITION: Record<Spot, string> = {
-  bottom: 'bottom-3 left-1/2 -translate-x-1/2',
-  top: 'top-3 left-1/2 -translate-x-1/2',
-  left: 'left-3 top-1/2 -translate-y-1/2',
-  right: 'right-3 top-1/2 -translate-y-1/2',
+  bottom: 'bottom-2 left-1/2 -translate-x-1/2',
+  top: 'top-2 left-1/2 -translate-x-1/2',
+  left: 'left-2 top-1/2 -translate-y-1/2',
+  right: 'right-2 top-1/2 -translate-y-1/2',
 };
 
-const SeatBadge: React.FC<{ seat: HeartsSeat | undefined; view: HeartsView; playerId: string }> = ({
+const SeatBadge: React.FC<{ seat: HeartsSeat | undefined; view: HeartsView; you?: boolean }> = ({
   seat,
   view,
-  playerId,
+  you = false,
 }) => {
   if (!seat) return null;
   const onClock = seat.id === view.onClock && view.phase === 'PLAYING';
   return (
     <div
-      className={`rounded-xl px-3.5 py-2 text-white border ${
+      className={`rounded-xl px-2.5 sm:px-3 py-2 text-white border min-w-0 ${
         onClock ? 'border-blue-400 bg-blue-600/30 ring-2 ring-blue-400' : 'border-slate-700 bg-slate-800'
       }`}
     >
-      <div className="flex items-center gap-2 text-sm font-semibold">
+      <div className="flex items-center gap-2 text-sm font-semibold truncate">
         {seat.nick}
-        {seat.id === playerId && <span className="text-xs text-slate-300">(you)</span>}
+        {you && <span className="text-xs font-normal text-slate-300">(you)</span>}
         {view.phase === 'PASSING' && seat.passed && <span className="text-xs text-emerald-300">✓ passed</span>}
       </div>
-      <div className="text-xs text-slate-300">
-        {seat.cardCount} cards · ♥ {seat.handPoints} this hand · {seat.score} total
+      <div className="text-[11px] sm:text-xs text-slate-300">
+        {seat.cardCount} cards · ♥ {seat.handPoints} · {seat.score} pts
       </div>
     </div>
   );

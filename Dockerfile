@@ -24,6 +24,7 @@ COPY engine-core/build.gradle.kts engine-core/
 COPY games/high-card/build.gradle.kts games/high-card/
 COPY games/hearts/build.gradle.kts games/hearts/
 COPY games/gin-rummy/build.gradle.kts games/gin-rummy/
+COPY games/poker/build.gradle.kts games/poker/
 COPY whitejack-bots/build.gradle.kts whitejack-bots/
 COPY whitejack-server/build.gradle.kts whitejack-server/
 COPY whitejack-ui/build.gradle.kts whitejack-ui/

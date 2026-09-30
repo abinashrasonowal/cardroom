@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { CardView } from '@/components/CardView';
 import { TableSettings } from '@/types/game';
-import { GinHandResult, GinView, WireCard } from '@/types/wire';
+import { GinHandResult, GinSeat, GinView, WireCard } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
 import { toUiCard } from '@/utils/cards';
 
@@ -32,6 +32,8 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
   const myTurn = view.onClock === playerId;
   const drawing = myTurn && view.phase === 'DRAW';
   const discarding = myTurn && view.phase === 'DISCARD';
+  const canDrawStock = view.drawSources.includes('STOCK');
+  const canDrawDiscard = view.drawSources.includes('DISCARD');
 
   const draw = (source: 'stock' | 'discard') => {
     soundFx.playCardDeal();
@@ -57,6 +59,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
     return `Waiting on ${nickOf(view.onClock)}`;
   };
 
+  // Overlapped within a meld like a held fan; the first card of each group sits flush.
   const myCard = (card: WireCard) => (
     <CardView
       key={cardKey(card)}
@@ -67,190 +70,179 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
       tooltip={sameCard(view.takenFromDiscard, card) ? 'Just taken from the pile — cannot be discarded this turn' : undefined}
       cardBack={settings.cardBack}
       fourColor={settings.fourColorDeck}
+      className="-ml-11 sm:-ml-8 lg:-ml-9 xl:-ml-4 first:ml-0"
     />
   );
 
+  const pileClass = (active: boolean) =>
+    `rounded-md ${active ? 'ring-2 ring-blue-400 cursor-pointer hover:-translate-y-1 transition-transform' : 'cursor-default'}`;
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Status bar */}
-      <section className="border border-slate-200 rounded-2xl px-5 py-4 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
-          <span className="text-slate-300">•</span>
-          <span className="text-slate-700">{nickOf(view.dealer)} dealt</span>
-          <span className="text-slate-300">•</span>
-          <span className="text-slate-700">First to 100</span>
-        </div>
-        <span className={`text-sm font-semibold ${myTurn ? 'text-blue-700' : 'text-slate-600'}`}>{status()}</span>
-      </section>
+    // Fills the viewport between navbar and footer on wide screens: table and hand on the left,
+    // status and scores on the right.
+    <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem] items-start">
+      <div className="flex flex-col gap-4 min-w-0 lg:min-h-[calc(100dvh-15rem)]">
+        {/* Table: the opponent across, the stock and discard between you */}
+        <section className="flex-1 rounded-2xl bg-slate-900 p-3 sm:p-5 flex flex-col items-center justify-between gap-5">
+          <SeatBadge seat={opponent} view={view} />
 
-      {view.phase === 'GAME_OVER' && (
-        <section className="rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-lg font-bold font-space text-slate-950">
-          🏆 {nickOf(view.winner)} {view.winner === playerId ? 'win' : 'wins'} with{' '}
-          {view.seats.find((s) => s.id === view.winner)?.score} points
-        </section>
-      )}
-
-      {/* Table */}
-      <section className="rounded-2xl bg-slate-900 p-5 sm:p-6 flex flex-col items-center gap-6 text-white">
-        {opponent && (
-          <div
-            className={`rounded-xl px-4 py-2 border ${
-              view.onClock === opponent.id ? 'border-blue-400 ring-2 ring-blue-400 bg-blue-600/30' : 'border-slate-700 bg-slate-800'
-            }`}
-          >
-            <div className="text-sm font-semibold">{opponent.nick}</div>
-            <div className="text-xs text-slate-300">
-              {opponent.cardCount} cards · {opponent.score} points
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-end gap-10">
-          <div className="flex flex-col items-center gap-2">
-            <button
-              type="button"
-              disabled={!view.drawSources.includes('STOCK')}
-              onClick={() => draw('stock')}
-              className={`rounded-lg ${view.drawSources.includes('STOCK') ? 'ring-2 ring-blue-400 cursor-pointer hover:-translate-y-1 transition-transform' : 'cursor-default'}`}
-              aria-label="Draw from the stock"
-            >
-              <CardView faceDown cardBack={settings.cardBack} />
-            </button>
-            <span className="text-xs text-slate-300">Stock · {view.stockCount}</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <button
-              type="button"
-              disabled={!view.drawSources.includes('DISCARD')}
-              onClick={() => draw('discard')}
-              className={`rounded-lg ${view.drawSources.includes('DISCARD') ? 'ring-2 ring-blue-400 cursor-pointer hover:-translate-y-1 transition-transform' : 'cursor-default'}`}
-              aria-label="Take the top discard"
-            >
-              {view.discardTop ? (
-                <CardView card={toUiCard(view.discardTop)} cardBack={settings.cardBack} fourColor={settings.fourColorDeck} />
-              ) : (
-                <div className="w-16 h-23 sm:w-18 sm:h-26 md:w-20 md:h-28 rounded-lg border-2 border-dashed border-slate-600" />
-              )}
-            </button>
-            <span className="text-xs text-slate-300">Discard · {view.discardCount}</span>
-          </div>
-        </div>
-
-        {me && (
-          <div
-            className={`rounded-xl px-4 py-2 border ${
-              myTurn ? 'border-blue-400 ring-2 ring-blue-400 bg-blue-600/30' : 'border-slate-700 bg-slate-800'
-            }`}
-          >
-            <div className="text-sm font-semibold">
-              {me.nick} <span className="text-xs text-slate-300">(you)</span>
-            </div>
-            <div className="text-xs text-slate-300">{me.score} points</div>
-          </div>
-        )}
-      </section>
-
-      {/* My hand, grouped the way it would be laid down */}
-      <section className="border border-slate-200 rounded-2xl p-5 flex flex-col gap-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <span className="font-bold font-space text-slate-950">
-            Your hand
-            {view.myMelds && (
-              <span className="ml-2 text-sm font-normal text-slate-600">deadwood {view.myMelds.deadwoodPoints}</span>
-            )}
-          </span>
-          {discarding && (
-            <div className="flex items-center gap-2">
+          <div className="flex items-end gap-8 sm:gap-12 rounded-2xl bg-slate-800/60 border border-slate-700/70 px-6 sm:px-10 py-5">
+            <div className="flex flex-col items-center gap-2">
               <button
                 type="button"
-                onClick={() => discard(false)}
-                disabled={!selected}
-                className="h-10 px-5 rounded-lg bg-slate-800 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-900 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                disabled={!canDrawStock}
+                onClick={() => draw('stock')}
+                className={pileClass(canDrawStock)}
+                aria-label="Draw from the stock"
               >
-                Discard
+                <CardView faceDown cardBack={settings.cardBack} />
               </button>
-              {contains(view.ginDiscards, selected) ? (
-                <button
-                  type="button"
-                  onClick={() => discard(true)}
-                  className="h-10 px-5 rounded-lg bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-700 cursor-pointer"
-                >
-                  Gin!
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => discard(true)}
-                  disabled={!contains(view.knockDiscards, selected)}
-                  title={view.knockDiscards.length === 0 ? 'Knocking needs 10 or less deadwood after your discard' : undefined}
-                  className="h-10 px-5 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                >
-                  Knock
-                </button>
-              )}
+              <span className="text-xs text-slate-300">Stock · {view.stockCount}</span>
             </div>
-          )}
-        </div>
+            <div className="flex flex-col items-center gap-2">
+              <button
+                type="button"
+                disabled={!canDrawDiscard}
+                onClick={() => draw('discard')}
+                className={pileClass(canDrawDiscard)}
+                aria-label="Take the top discard"
+              >
+                {view.discardTop ? (
+                  <CardView card={toUiCard(view.discardTop)} cardBack={settings.cardBack} fourColor={settings.fourColorDeck} />
+                ) : (
+                  <div className="w-16 h-[5.6rem] sm:w-18 sm:h-[6.3rem] md:w-20 md:h-28 rounded-md border-2 border-dashed border-slate-600" />
+                )}
+              </button>
+              <span className="text-xs text-slate-300">Discard · {view.discardCount}</span>
+            </div>
+          </div>
 
-        {view.myMelds ? (
-          <div className="flex flex-wrap gap-4">
-            {view.myMelds.melds.map((meld) => (
-              <div key={meld.map(cardKey).join()} className="flex gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/60 p-2">
-                {meld.map(myCard)}
-              </div>
-            ))}
-            {view.myMelds.deadwood.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 rounded-xl border border-dashed border-slate-300 p-2">
-                {view.myMelds.deadwood.map(myCard)}
+          <SeatBadge seat={me} view={view} you />
+        </section>
+
+        {/* Your cards, grouped the way they would be laid down */}
+        <section
+          className={`rounded-2xl border px-3 sm:px-5 pt-3 pb-4 flex flex-col gap-3 bg-slate-900 ${
+            myTurn ? 'border-blue-400 ring-2 ring-blue-400/60' : 'border-slate-900'
+          }`}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-2 min-h-9">
+            <span className="text-sm font-semibold text-white">
+              Your hand
+              {view.myMelds && (
+                <span className="ml-2 text-xs font-normal text-slate-400">deadwood {view.myMelds.deadwoodPoints}</span>
+              )}
+            </span>
+            {discarding && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => discard(false)}
+                  disabled={!selected}
+                  className="h-9 px-4 rounded-lg bg-slate-700 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  Discard
+                </button>
+                {contains(view.ginDiscards, selected) ? (
+                  <button
+                    type="button"
+                    onClick={() => discard(true)}
+                    className="h-9 px-4 rounded-lg bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-500 cursor-pointer"
+                  >
+                    Gin!
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => discard(true)}
+                    disabled={!contains(view.knockDiscards, selected)}
+                    title={view.knockDiscards.length === 0 ? 'Knocking needs 10 or less deadwood after your discard' : undefined}
+                    className="h-9 px-4 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    Knock
+                  </button>
+                )}
               </div>
             )}
           </div>
-        ) : (
-          <span className="text-sm text-slate-500">Watching.</span>
+
+          {/* Each meld is its own fan; the top padding leaves room for a picked card to lift. */}
+          {view.myMelds ? (
+            <div className="flex flex-wrap justify-center gap-x-3 gap-y-2 pt-3">
+              {view.myMelds.melds.map((meld) => (
+                <div key={meld.map(cardKey).join()} className="flex rounded-xl border border-emerald-400/40 bg-emerald-500/10 p-1.5">
+                  {meld.map(myCard)}
+                </div>
+              ))}
+              {view.myMelds.deadwood.length > 0 && (
+                <div className="flex rounded-xl border border-dashed border-slate-600 p-1.5">{view.myMelds.deadwood.map(myCard)}</div>
+              )}
+            </div>
+          ) : (
+            <span className="text-sm text-slate-400 py-8 text-center">Watching.</span>
+          )}
+          <p className="text-xs text-slate-400">Green groups are melds. Cards in the dashed group count as deadwood.</p>
+        </section>
+      </div>
+
+      {/* Sidebar: where the hand stands, the scores, then how the last hand ended */}
+      <aside className="flex flex-col gap-4 lg:sticky lg:top-28">
+        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
+            <span className="text-slate-600">{nickOf(view.dealer)} dealt</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            <span className="text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+              First to 100
+            </span>
+            {view.myMelds && (
+              <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                Deadwood {view.myMelds.deadwoodPoints}
+              </span>
+            )}
+          </div>
+          <p
+            className={`text-sm font-semibold rounded-lg px-3 py-2 ${
+              myTurn ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600'
+            }`}
+          >
+            {status()}
+          </p>
+        </section>
+
+        {view.phase === 'GAME_OVER' && (
+          <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 font-bold font-space text-slate-950">
+            🏆 {nickOf(view.winner)} {view.winner === playerId ? 'win' : 'wins'} with{' '}
+            {view.seats.find((s) => s.id === view.winner)?.score} points
+          </section>
         )}
-        <p className="text-xs text-slate-500">
-          Green groups are melds. Cards in the dashed group count as deadwood.
-        </p>
-      </section>
 
-      {view.lastHand && <LastHand result={view.lastHand} nickOf={nickOf} settings={settings} />}
-
-      {/* Scores */}
-      <section className="border border-slate-200 rounded-2xl p-5 overflow-x-auto">
-        <table className="w-full text-sm text-left">
-          <thead>
-            <tr className="text-xs uppercase text-slate-500">
-              <th className="py-2 pr-3 font-semibold">Hand</th>
-              {view.seats.map((s) => (
-                <th key={s.id} className={`py-2 px-2 text-center font-semibold ${s.id === playerId ? 'text-blue-700' : ''}`}>
-                  {s.nick}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100 font-mono-code">
-            {view.history.map((row, i) => (
-              <tr key={i}>
-                <td className="py-1.5 pr-3 text-slate-500">{i + 1}</td>
-                {row.map((points, j) => (
-                  <td key={j} className="py-1.5 px-2 text-center">
-                    {points}
-                  </td>
-                ))}
-              </tr>
+        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-2">
+          <h3 className="font-bold font-space text-slate-950">Scores</h3>
+          {/* One row per player, so the sidebar never overflows however many hands are played. */}
+          <ul className="flex flex-col divide-y divide-slate-100">
+            {view.seats.map((s, j) => (
+              <li key={s.id} className="py-2 flex items-center justify-between gap-3">
+                <div className="flex flex-col min-w-0">
+                  <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-blue-700' : 'text-slate-900'}`}>
+                    {s.nick}
+                    {s.id === playerId && <span className="text-xs font-normal text-slate-500"> (you)</span>}
+                  </span>
+                  {view.history.length > 0 && (
+                    <span className="text-xs text-slate-500 font-mono-code truncate">
+                      {view.history.map((row) => row[j]).join(' · ')}
+                    </span>
+                  )}
+                </div>
+                <span className="text-lg font-bold font-mono-code text-slate-950">{s.score}</span>
+              </li>
             ))}
-            <tr className="font-bold">
-              <td className="py-2 pr-3 text-slate-700">Total</td>
-              {view.seats.map((s) => (
-                <td key={s.id} className="py-2 px-2 text-center">
-                  {s.score}
-                </td>
-              ))}
-            </tr>
-          </tbody>
-        </table>
-      </section>
+          </ul>
+        </section>
+
+        {view.lastHand && <LastHand result={view.lastHand} nickOf={nickOf} settings={settings} />}
+      </aside>
     </div>
   );
 };
@@ -263,40 +255,69 @@ const LastHand: React.FC<{ result: GinHandResult; nickOf: (id: string | null) =>
   nickOf,
   settings,
 }) => {
+  // Small and overlapped, so a full hand fits the sidebar in a row or two.
   const small = (card: WireCard) => (
-    <CardView key={cardKey(card)} card={toUiCard(card)} size="sm" cardBack={settings.cardBack} fourColor={settings.fourColorDeck} />
+    <CardView
+      key={cardKey(card)}
+      card={toUiCard(card)}
+      size="sm"
+      cardBack={settings.cardBack}
+      fourColor={settings.fourColorDeck}
+      className="-ml-4 first:ml-0"
+    />
   );
   return (
-    <section className="border border-slate-200 rounded-2xl p-5 flex flex-col gap-4">
-      <h3 className="font-bold font-space text-slate-950">
+    <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
+      <h3 className="text-sm font-bold font-space text-slate-950">
         Last hand:{' '}
         {result.outcome === 'DEAD'
           ? 'the stock ran out — no score'
           : `${nickOf(result.knocker)} ${OUTCOME_LABEL[result.outcome]}. ${nickOf(result.winner)} scored ${result.points}.`}
       </h3>
       {result.hands.map((hand) => (
-        <div key={hand.player} className="flex flex-col gap-2">
-          <span className="text-sm font-semibold text-slate-700">
+        <div key={hand.player} className="flex flex-col gap-1.5">
+          <span className="text-xs font-semibold text-slate-700">
             {nickOf(hand.player)} · deadwood {hand.deadwoodPoints}
           </span>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
             {hand.melds.map((meld) => (
-              <div key={meld.map(cardKey).join()} className="flex gap-1 rounded-lg border border-emerald-200 bg-emerald-50/60 p-1.5">
+              <div key={meld.map(cardKey).join()} className="flex rounded-lg border border-emerald-200 bg-emerald-50/60 p-1">
                 {meld.map(small)}
               </div>
             ))}
             {hand.laidOff.length > 0 && (
-              <div className="flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50/60 p-1.5">
+              <div className="flex items-center rounded-lg border border-blue-200 bg-blue-50/60 p-1">
                 <span className="text-[10px] font-semibold text-blue-700 px-1">laid off</span>
-                {hand.laidOff.map(small)}
+                <div className="flex">{hand.laidOff.map(small)}</div>
               </div>
             )}
             {hand.deadwood.length > 0 && (
-              <div className="flex gap-1 rounded-lg border border-dashed border-slate-300 p-1.5">{hand.deadwood.map(small)}</div>
+              <div className="flex rounded-lg border border-dashed border-slate-300 p-1">{hand.deadwood.map(small)}</div>
             )}
           </div>
         </div>
       ))}
     </section>
+  );
+};
+
+const SeatBadge: React.FC<{ seat: GinSeat | undefined; view: GinView; you?: boolean }> = ({ seat, view, you = false }) => {
+  if (!seat) return null;
+  const onClock = seat.id === view.onClock && view.phase !== 'GAME_OVER';
+  return (
+    <div
+      className={`rounded-xl px-2.5 sm:px-3 py-2 text-white border min-w-0 ${
+        onClock ? 'border-blue-400 bg-blue-600/30 ring-2 ring-blue-400' : 'border-slate-700 bg-slate-800'
+      }`}
+    >
+      <div className="flex items-center gap-2 text-sm font-semibold truncate">
+        {seat.nick}
+        {you && <span className="text-xs font-normal text-slate-300">(you)</span>}
+        {seat.id === view.dealer && <span className="text-xs font-normal text-amber-300">dealer</span>}
+      </div>
+      <div className="text-[11px] sm:text-xs text-slate-300">
+        {seat.cardCount} cards · {seat.score} pts
+      </div>
+    </div>
   );
 };

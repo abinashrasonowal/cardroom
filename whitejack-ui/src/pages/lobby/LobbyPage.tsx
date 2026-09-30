@@ -18,7 +18,10 @@ interface LobbyPageProps {
 const OFFLINE_LAUNCH_DELAY_MS = 400;
 
 /** The games listed in the lobby grid, in display order. */
-const LOBBY_GAMES: GameKey[] = ['high_card', 'hearts', 'gin_rummy', 'spades'];
+const LOBBY_GAMES: GameKey[] = ['poker', 'hearts', 'gin_rummy', 'spades'];
+
+/** Prefilled in the host name field, and used if it is left blank. */
+const DEFAULT_HOST_NAME = 'Jack';
 
 export const LobbyPage: React.FC<LobbyPageProps> = ({
   onStartGame,
@@ -28,7 +31,7 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
 }) => {
   /** Null while browsing games; the game being configured otherwise. */
   const [configuringKey, setConfiguringKey] = useState<GameKey | null>(null);
-  const [hostName, setHostName] = useState<string>(initialNickname);
+  const [hostName, setHostName] = useState<string>(initialNickname || DEFAULT_HOST_NAME);
   const [rulesState, setRulesState] = useState<Record<GameKey, RoomRules>>(DEFAULT_RULES);
 
   const games = LOBBY_GAMES.map((key) => GAME_DEFINITIONS[key]);
@@ -52,7 +55,7 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
 
   const handleLaunch = async (key: GameKey) => {
     const def = GAME_DEFINITIONS[key];
-    const name = hostName.trim() || 'Host';
+    const name = hostName.trim() || DEFAULT_HOST_NAME;
     if (def.serverGameId) {
       await onCreateLive(def.serverGameId, name);
       return;
