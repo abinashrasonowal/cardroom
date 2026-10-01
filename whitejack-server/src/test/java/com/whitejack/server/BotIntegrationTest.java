@@ -88,6 +88,19 @@ class BotIntegrationTest {
                         && !"PASSING".equals(frame.at("/view/phase").asText()),
                 this::heartsMove);
         assertTrue(FakeJev.ASKED.get() > asked, "the bots consulted the advisor");
+
+        // Hand 0 is over, so its reasoning is released — labels and probabilities, never the bot's state.
+        JsonNode notes = http.getForObject("/api/rooms/" + room + "/bot-notes", JsonNode.class);
+        assertEquals(0, notes.path(0).path("hand").asInt(), notes.toString());
+        JsonNode decisions = notes.path(0).path("decisions");
+        assertTrue(decisions.size() > 0, "the bots' moves were recorded");
+        for (JsonNode decision : decisions) {
+            assertTrue(decision.path("nick").asText().endsWith("(bot)"));
+            assertTrue(decision.path("state").isMissingNode(), "no private position text is served");
+        }
+        assertTrue(java.util.stream.StreamSupport.stream(decisions.spliterator(), false)
+                .anyMatch(d -> "ADVISOR".equals(d.path("source").asText()) && d.at("/options/0/probability").isNumber()),
+                "advisor probabilities are included");
     }
 
     @Test

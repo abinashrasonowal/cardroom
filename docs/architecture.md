@@ -500,6 +500,11 @@ complete. Default the landing page to *spectate a live bot table*, with one-clic
 
 ## 15. Testing
 
+> **Status:** this table is the target suite, not a list of existing methods. Related checks live
+> today in `ContractTest`, `FairnessTest`, `RoomActorTest`, `GameSessionTest`, the per-game
+> `*GameTest` redaction cases and `GatewayIntegrationTest`. The projection property test and the
+> ArchUnit ban list below are still to be written.
+
 | Layer | Test |
 | ----- | ---- |
 | Game module | pure unit tests on `validate` / `reduce`; no mocks needed |

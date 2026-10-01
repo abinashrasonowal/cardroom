@@ -102,7 +102,7 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
                 <span className="truncate font-medium">{name}</span>
                 {m.id === playerId && <span className="text-[13px] text-stone-500">You</span>}
                 {bot && (
-                  <span className="text-xs text-stone-600 bg-stone-100 rounded px-1.5 py-0.5 shrink-0">Bot</span>
+                  <span className="text-xs text-felt-800 bg-felt-50 rounded px-1.5 py-0.5 shrink-0">AI bot</span>
                 )}
               </span>
               <span className="flex items-center gap-3 shrink-0 text-[13px] text-stone-500">
@@ -139,7 +139,7 @@ export const WaitingRoom: React.FC<WaitingRoomProps> = ({
                 className={`${btn} border border-stone-300 text-stone-900 hover:border-stone-400 bg-white flex items-center gap-1.5`}
               >
                 <span aria-hidden className="material-symbols-outlined text-[18px]">add</span>
-                {adding ? 'Adding bot…' : 'Add a bot'}
+                {adding ? 'Adding AI bot…' : 'Add AI bot'}
               </button>
             )}
             {botError && (

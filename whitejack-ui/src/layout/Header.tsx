@@ -1,4 +1,6 @@
 import React from 'react';
+import { GitHubMark } from '@/components/GitHubMark';
+import { GITHUB_URL } from '@/config/site';
 
 interface HeaderProps {
   soundEnabled: boolean;
@@ -128,6 +130,17 @@ export const Header: React.FC<HeaderProps> = ({
               {soundEnabled ? 'volume_up' : 'volume_off'}
             </span>
           </button>
+
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noreferrer"
+            className={`${iconButton} ${inGame ? 'max-sm:hidden' : ''}`}
+            aria-label="Source code on GitHub"
+            title="Source on GitHub"
+          >
+            <GitHubMark />
+          </a>
 
           <button
             type="button"

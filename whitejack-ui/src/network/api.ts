@@ -1,4 +1,5 @@
 // The small HTTP surface. Everything after "create a room" happens over the socket.
+import { BotHandNotes } from '@/types/wire';
 import { readLocal, writeLocal } from '@/utils/storage';
 
 export interface Me {
@@ -65,6 +66,13 @@ export async function addBot(room: string): Promise<AddedBot> {
       method: 'POST',
       headers: identityHeaders(),
     })
+  );
+}
+
+/** What the room's bots decided in finished hands, newest first. The live hand is never included. */
+export async function botNotes(room: string): Promise<BotHandNotes[]> {
+  return asJson<BotHandNotes[]>(
+    await fetch(`/api/rooms/${encodeURIComponent(room)}/bot-notes`, { headers: identityHeaders() })
   );
 }
 
