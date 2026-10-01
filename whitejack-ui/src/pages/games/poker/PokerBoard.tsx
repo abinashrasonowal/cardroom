@@ -44,8 +44,11 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
   const nickOf = (id: string | null) => (id === playerId ? 'You' : view.seats.find((s) => s.id === id)?.nick ?? '…');
   const ordered = view.seats.map((_, i) => view.seats[(myIndex + i) % view.seats.length]);
 
-  const send = (payload: object) => {
-    soundFx.playCardDeal();
+  const send = (payload: { type: string; to?: number }) => {
+    // Chips for money going in, a mucked card for a fold, a knock on the table for a check.
+    if (payload.type === 'call' || payload.type === 'raise') soundFx.playChips();
+    else if (payload.type === 'fold') soundFx.playCardPlay();
+    else soundFx.playKnock();
     intent(payload);
   };
   const clampRaise = (n: number) => Math.max(view.minRaiseTo, Math.min(view.maxRaiseTo, Math.round(n)));
@@ -73,9 +76,9 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem] items-start">
       <div className="flex flex-col gap-4 min-w-0 lg:min-h-[calc(100dvh-15rem)]">
         {/* Table: an oval of felt, seats round the rim, board and pot in the middle */}
-        <section className="flex-1 rounded-2xl bg-slate-900 p-3 sm:p-5 flex">
+        <section className="flex-1 rounded-xl bg-stone-900 p-3 sm:p-5 flex">
           <div className="relative flex-1 min-h-[26rem] sm:min-h-[30rem]">
-            <div className="absolute inset-x-[7%] inset-y-[11%] rounded-[50%] bg-emerald-900 border-[10px] border-slate-800 shadow-[inset_0_0_60px_rgba(0,0,0,0.45)]" />
+            <div className="absolute inset-x-[7%] inset-y-[11%] rounded-[50%] bg-emerald-900 border-[10px] border-stone-800 shadow-[inset_0_0_60px_rgba(0,0,0,0.45)]" />
 
             {/* Board and pot */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center gap-2.5">
@@ -99,7 +102,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                   )
                 )}
               </div>
-              <span className="text-[11px] font-semibold uppercase tracking-widest text-emerald-200/80">
+              <span className="text-xs font-medium tracking-wide text-emerald-200/80">
                 {STREET_LABEL[view.street]}
               </span>
             </div>
@@ -114,7 +117,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                 </div>
                 {seat.bet > 0 && (
                   <div
-                    className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 text-slate-950 text-[11px] font-bold font-mono-code px-2 py-0.5 shadow"
+                    className="absolute -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-400 text-stone-950 text-[11px] font-bold font-mono-code px-2 py-0.5 shadow"
                     style={around(offset, ordered.length, 27, 24)}
                   >
                     {chips(seat.bet)}
@@ -127,8 +130,8 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
 
         {/* Your cards and the betting controls */}
         <section
-          className={`rounded-2xl border px-3 sm:px-5 py-4 flex flex-col md:flex-row md:items-center gap-4 bg-slate-900 ${
-            myTurn ? 'border-blue-400 ring-2 ring-blue-400/60' : 'border-slate-900'
+          className={`rounded-xl border px-3 sm:px-5 py-4 flex flex-col md:flex-row md:items-center gap-4 bg-stone-900 ${
+            myTurn ? 'border-felt-400 ring-2 ring-felt-400/60' : 'border-stone-900'
           }`}
         >
           <div className="flex items-center gap-4 shrink-0">
@@ -145,12 +148,12 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                   />
                 ))
               ) : (
-                <span className="text-sm text-slate-400 py-6">No cards this hand.</span>
+                <span className="text-sm text-stone-400 py-6">No cards this hand.</span>
               )}
             </div>
             <div className="flex flex-col text-white">
               <span className="text-sm font-semibold">Your hand</span>
-              <span className="text-xs text-slate-400">{chips(me?.stack ?? 0)} chips behind</span>
+              <span className="text-xs text-stone-400">{chips(me?.stack ?? 0)} chips behind</span>
             </div>
           </div>
 
@@ -165,8 +168,8 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                       onClick={() => setRaiseTo(preset.to)}
                       className={`h-8 px-3 rounded-md text-xs font-semibold border cursor-pointer ${
                         raiseTo === preset.to
-                          ? 'bg-blue-600 border-blue-500 text-white'
-                          : 'bg-slate-800 border-slate-700 text-slate-200 hover:bg-slate-700'
+                          ? 'bg-felt-600 border-felt-500 text-white'
+                          : 'bg-stone-800 border-stone-700 text-stone-200 hover:bg-stone-700'
                       }`}
                     >
                       {preset.label}
@@ -181,7 +184,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                     step={1}
                     value={raiseTo}
                     onChange={(e) => setRaiseTo(clampRaise(Number(e.target.value)))}
-                    className="flex-1 accent-blue-500 cursor-pointer"
+                    className="flex-1 accent-felt-500 cursor-pointer"
                     aria-label="Raise amount"
                   />
                   <input
@@ -191,7 +194,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                     value={raiseTo}
                     onChange={(e) => setRaiseTo(Number(e.target.value))}
                     onBlur={() => setRaiseTo(clampRaise(raiseTo))}
-                    className="w-24 h-9 rounded-md bg-slate-800 border border-slate-700 text-white text-sm font-mono-code px-2"
+                    className="w-24 h-9 rounded-md bg-stone-800 border border-stone-700 text-white text-sm font-mono-code px-2"
                     aria-label="Raise to"
                   />
                 </div>
@@ -203,21 +206,21 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                 label="Fold"
                 disabled={!myTurn}
                 onClick={() => send({ type: 'fold' })}
-                className="bg-slate-700 hover:bg-slate-600"
+                className="bg-stone-700 hover:bg-stone-600"
               />
               {view.legal.includes('call') ? (
                 <ActionButton
                   label={`Call ${chips(view.toCall)}`}
                   disabled={!myTurn}
                   onClick={() => send({ type: 'call' })}
-                  className="bg-emerald-600 hover:bg-emerald-500"
+                  className="bg-stone-50 hover:bg-white text-stone-900!"
                 />
               ) : (
                 <ActionButton
                   label="Check"
                   disabled={!myTurn || !view.legal.includes('check')}
                   onClick={() => send({ type: 'check' })}
-                  className="bg-emerald-600 hover:bg-emerald-500"
+                  className="bg-stone-50 hover:bg-white text-stone-900!"
                 />
               )}
               {canRaise && (
@@ -225,7 +228,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
                   label={raiseLabel}
                   disabled={raiseTo < view.minRaiseTo || raiseTo > view.maxRaiseTo}
                   onClick={() => send({ type: 'raise', to: raiseTo })}
-                  className="bg-blue-600 hover:bg-blue-500"
+                  className="bg-felt-500 hover:bg-felt-400"
                 />
               )}
             </div>
@@ -235,13 +238,13 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
 
       {/* Sidebar: where the hand stands, the chip counts, and how the last hand ended */}
       <aside className="flex flex-col gap-4 lg:sticky lg:top-28">
-        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
+        <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
-            <span className="text-slate-600">{STREET_LABEL[view.street]}</span>
+            <span className="font-semibold font-display text-stone-900">Hand {view.hand + 1}</span>
+            <span className="text-stone-600">{STREET_LABEL[view.street]}</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <span className="text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-stone-600 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">
               Blinds {chips(view.smallBlind)} / {chips(view.bigBlind)}
             </span>
             <span className="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
@@ -250,7 +253,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
           </div>
           <p
             className={`text-sm font-semibold rounded-lg px-3 py-2 ${
-              myTurn ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600'
+              myTurn ? 'bg-felt-50 text-felt-700' : 'bg-stone-50 text-stone-600'
             }`}
           >
             {status()}
@@ -258,28 +261,29 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
         </section>
 
         {view.phase === 'GAME_OVER' && (
-          <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 font-bold font-space text-slate-950">
-            🏆 {nickOf(view.winner)} {view.winner === playerId ? 'win' : 'wins'} the table
+          <section role="status" className="rounded-xl border border-felt-200 bg-felt-50 p-4 font-semibold font-display text-felt-900 flex items-center gap-2">
+            <span aria-hidden className="material-symbols-outlined text-[20px] text-felt-600">trophy</span>
+            {nickOf(view.winner)} {view.winner === playerId ? 'win' : 'wins'} the table
           </section>
         )}
 
-        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-2">
-          <h3 className="font-bold font-space text-slate-950">Chips</h3>
-          <ul className="flex flex-col divide-y divide-slate-100">
+        <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-2">
+          <h3 className="font-semibold font-display text-stone-900">Chips</h3>
+          <ul className="flex flex-col divide-y divide-stone-100">
             {[...view.seats]
               .sort((a, b) => b.stack + b.bet - (a.stack + a.bet))
               .map((s) => (
                 <li key={s.id} className="py-2 flex items-center justify-between gap-3">
                   <div className="flex flex-col min-w-0">
-                    <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-blue-700' : 'text-slate-900'}`}>
+                    <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-felt-700' : 'text-stone-900'}`}>
                       {s.nick}
-                      {s.id === playerId && <span className="text-xs font-normal text-slate-500"> (you)</span>}
+                      {s.id === playerId && <span className="text-xs font-normal text-stone-500"> (you)</span>}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-stone-500">
                       {!s.inHand ? (s.stack === 0 ? 'Out' : 'Sitting out') : s.folded ? 'Folded' : s.allIn ? 'All-in' : 'In the hand'}
                     </span>
                   </div>
-                  <span className="text-lg font-bold font-mono-code text-slate-950">{chips(s.stack + s.bet)}</span>
+                  <span className="text-lg font-bold font-mono-code text-stone-950">{chips(s.stack + s.bet)}</span>
                 </li>
               ))}
           </ul>
@@ -301,7 +305,7 @@ const ActionButton: React.FC<{ label: string; disabled: boolean; onClick: () => 
     type="button"
     onClick={onClick}
     disabled={disabled}
-    className={`h-11 min-w-28 px-5 rounded-lg text-white text-xs font-bold uppercase tracking-wider disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${className}`}
+    className={`h-11 min-w-28 px-5 rounded-lg text-white text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer ${className}`}
   >
     {label}
   </button>
@@ -326,24 +330,24 @@ const PokerSeatBadge: React.FC<{ seat: PokerSeat; view: PokerView; you: boolean;
       )}
       <div
         className={`relative rounded-xl px-2.5 sm:px-3 py-1.5 text-white border text-center min-w-24 ${
-          onClock ? 'border-blue-400 bg-blue-600/40 ring-2 ring-blue-400' : 'border-slate-700 bg-slate-800'
+          onClock ? 'border-felt-400 bg-felt-600/40 ring-2 ring-felt-400' : 'border-stone-700 bg-stone-800'
         }`}
       >
         {seat.id === view.dealer && (
           <span
             title="Dealer button"
-            className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-white text-slate-950 text-[10px] font-bold flex items-center justify-center shadow"
+            className="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-white text-stone-950 text-[10px] font-bold flex items-center justify-center shadow"
           >
             D
           </span>
         )}
         <div className="text-xs sm:text-sm font-semibold truncate max-w-28">
           {seat.nick}
-          {you && <span className="text-[11px] font-normal text-slate-300"> (you)</span>}
+          {you && <span className="text-[11px] font-normal text-stone-300"> (you)</span>}
         </div>
         <div className="text-[11px] sm:text-xs font-mono-code text-amber-200">{chips(seat.stack)}</div>
         {(seat.lastAction || seat.allIn) && (
-          <div className="text-[10px] uppercase tracking-wider text-slate-300">{seat.allIn ? 'All-in' : seat.lastAction}</div>
+          <div className="text-[10px] uppercase tracking-wider text-stone-300">{seat.allIn ? 'All-in' : seat.lastAction}</div>
         )}
       </div>
     </div>
@@ -356,15 +360,15 @@ const LastHand: React.FC<{
   nickOf: (id: string | null) => string;
   settings: TableSettings;
 }> = ({ result, nickOf, settings }) => (
-  <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
-    <h3 className="font-bold font-space text-slate-950">Hand {result.hand + 1} result</h3>
-    <ul className="flex flex-col gap-1 text-sm text-slate-700">
+  <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-3">
+    <h3 className="font-semibold font-display text-stone-900">Hand {result.hand + 1} result</h3>
+    <ul className="flex flex-col gap-1 text-sm text-stone-700">
       {result.pots.map((pot, i) => (
         <li key={i}>
-          <strong className="text-slate-950">{pot.winners.map(nickOf).join(' & ')}</strong>{' '}
+          <strong className="text-stone-950">{pot.winners.map(nickOf).join(' & ')}</strong>{' '}
           {pot.winners.length > 1 ? 'split' : 'won'} {chips(pot.amount)}
-          {result.pots.length > 1 && <span className="text-slate-500"> ({i === 0 ? 'main pot' : `side pot ${i}`})</span>}
-          {pot.handName && <span className="text-slate-500"> with {pot.handName.toLowerCase()}</span>}
+          {result.pots.length > 1 && <span className="text-stone-500"> ({i === 0 ? 'main pot' : `side pot ${i}`})</span>}
+          {pot.handName && <span className="text-stone-500"> with {pot.handName.toLowerCase()}</span>}
         </li>
       ))}
     </ul>
@@ -385,8 +389,8 @@ const LastHand: React.FC<{
               ))}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-semibold text-slate-900 truncate">{nickOf(reveal.player)}</span>
-              <span className="text-xs text-slate-500">{reveal.handName}</span>
+              <span className="text-sm font-semibold text-stone-900 truncate">{nickOf(reveal.player)}</span>
+              <span className="text-xs text-stone-500">{reveal.handName}</span>
             </div>
           </li>
         ))}

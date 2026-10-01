@@ -13,6 +13,7 @@ public record GinView(
         Arrangement myMelds,
         int stockCount,
         Card discardTop,
+        int discardCount,
         Card takenFromDiscard,
         List<String> drawSources,
         List<Card> discards,

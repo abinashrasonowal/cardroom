@@ -3,7 +3,8 @@ import React from 'react';
 interface HeaderProps {
   soundEnabled: boolean;
   onToggleSound: () => void;
-  onOpenAbout: () => void;
+  /** True while the About page is showing, to mark it in the nav. */
+  aboutActive?: boolean;
   onOpenSettings: () => void;
   inGame?: boolean;
   gameTitle?: string;
@@ -16,13 +17,29 @@ interface HeaderProps {
 /** LiveTable portals its room controls (code, invite, status, leave) into this element. */
 export const ROOM_SLOT_ID = 'header-room-slot';
 
-const roundButton =
-  'h-10 w-10 rounded-full bg-white border border-slate-200 text-slate-600 hover:text-violet-700 hover:border-violet-200 transition-colors shadow-sm cursor-pointer flex items-center justify-center shrink-0';
+const iconButton =
+  'h-9 w-9 rounded-md text-stone-500 hover:text-stone-900 hover:bg-stone-100 active:bg-stone-200 transition-colors cursor-pointer flex items-center justify-center shrink-0';
+
+const navLink = (active: boolean) =>
+  `h-8 px-2.5 rounded-md text-sm font-medium flex items-center transition-colors ${
+    active ? 'text-stone-900' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-100'
+  }`;
+
+/** The brand mark: a spade cut from an ink tile, matching the favicon. */
+const Mark: React.FC = () => (
+  <svg viewBox="0 0 32 32" aria-hidden className="h-7 w-7 shrink-0">
+    <rect width="32" height="32" rx="7" className="fill-stone-900" />
+    <path
+      d="M16 7c-3.2 3.6-7 6-7 9.6A3.6 3.6 0 0 0 15 19.2c-.2 2-1 3.4-2.4 4.8h6.8c-1.4-1.4-2.2-2.8-2.4-4.8a3.6 3.6 0 0 0 6-2.6C23 13 19.2 10.6 16 7z"
+      className="fill-stone-50"
+    />
+  </svg>
+);
 
 export const Header: React.FC<HeaderProps> = ({
   soundEnabled,
   onToggleSound,
-  onOpenAbout,
+  aboutActive = false,
   onOpenSettings,
   inGame = false,
   gameTitle,
@@ -30,79 +47,96 @@ export const Header: React.FC<HeaderProps> = ({
   onLeaveGame,
   liveRoom = false,
 }) => {
-  return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-slate-200/80">
-      <div className="h-20 w-full px-4 sm:px-8 flex items-center justify-between gap-4 max-w-[1560px] mx-auto">
-        {/* Brand / Logo */}
-        <div className="flex items-center gap-4 shrink-0">
-          <button
-            onClick={inGame ? onLeaveGame : undefined}
-            className={`flex items-center gap-3 text-left transition-opacity ${
-              inGame ? 'hover:opacity-85 cursor-pointer' : ''
-            }`}
-          >
-            {/* Logo Badge */}
-            <div className="h-11 w-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center gap-0.5 shadow-sm shrink-0">
-              <span className="text-slate-900 font-bold text-lg leading-none">♠</span>
-              <span className="text-red-500 font-bold text-lg leading-none">♥</span>
-            </div>
-            {/* In a live room a phone needs the width for the room controls; the logo alone stays. */}
-            <div className={`flex flex-col ${liveRoom ? 'max-sm:hidden' : ''}`}>
-              <span className="font-space text-lg sm:text-2xl tracking-tight text-slate-950 uppercase font-bold leading-none">
-                WHITEJACK
-              </span>
-              <span className="text-[10px] sm:text-xs text-violet-600 font-semibold tracking-[0.18em] uppercase mt-1">
-                Private Games with Friends
-              </span>
-            </div>
-          </button>
+  const brand = (
+    <>
+      <Mark />
+      {/* In a live room a phone needs the width for the room controls; the mark alone stays. */}
+      <span
+        translate="no"
+        className={`font-display text-[15px] font-semibold text-stone-900 ${liveRoom ? 'max-sm:hidden' : ''}`}
+      >
+        Whitejack
+      </span>
+    </>
+  );
 
-          {/* In-Game Status indicator */}
+  return (
+    <header className="fixed top-0 left-0 w-full z-40 bg-stone-50/85 backdrop-blur-md border-b border-stone-200/80">
+      <div
+        className={`h-14 w-full px-4 sm:px-6 flex items-center justify-between gap-4 mx-auto ${
+          inGame ? 'max-w-[1440px]' : 'max-w-[1200px]'
+        }`}
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          {inGame ? (
+            <button
+              type="button"
+              onClick={onLeaveGame}
+              aria-label="Back to lobby"
+              className="flex items-center gap-2.5 rounded-md -mx-1 px-1 py-1 hover:bg-stone-100 transition-colors cursor-pointer"
+            >
+              {brand}
+            </button>
+          ) : (
+            <a href="/" className="flex items-center gap-2.5 rounded-md -mx-1 px-1 py-1">
+              {brand}
+            </a>
+          )}
+
           {inGame && roomCode && !liveRoom && (
-            <div className="hidden md:flex items-center gap-2 pl-4 border-l border-slate-200">
-              <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                {gameTitle} Table
-              </span>
-              <span className="font-mono-code font-bold text-xs bg-violet-50 text-violet-700 border border-violet-100 px-2 py-0.5 rounded">
+            <div className="hidden md:flex items-center gap-2 pl-3 ml-1 border-l border-stone-200 text-sm">
+              <span className="text-stone-500 capitalize">{gameTitle?.toLowerCase().replace('_', ' ')}</span>
+              <code className="font-mono-code text-xs text-stone-700 bg-stone-100 px-1.5 py-0.5 rounded">
                 {roomCode}
-              </span>
+              </code>
             </div>
           )}
         </div>
 
-        {/* Actions Zone */}
-        <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
+          {!inGame && (
+            <nav aria-label="Main" className="flex items-center gap-0.5 mr-2">
+              <a href="/" aria-current={!aboutActive ? 'page' : undefined} className={navLink(!aboutActive)}>
+                Games
+              </a>
+              <a href="#/about" aria-current={aboutActive ? 'page' : undefined} className={navLink(aboutActive)}>
+                About
+              </a>
+            </nav>
+          )}
           {liveRoom && <div id={ROOM_SLOT_ID} className="flex items-center" />}
           {inGame && !liveRoom && (
             <button
+              type="button"
               onClick={onLeaveGame}
-              className="text-xs font-semibold text-slate-600 hover:text-slate-950 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer"
+              className="h-9 px-3 mr-1 rounded-md text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors flex items-center gap-1.5 cursor-pointer"
             >
-              <span className="material-symbols-outlined text-base">arrow_back</span>
-              <span className="hidden sm:inline">Back to Lobby</span>
+              <span aria-hidden className="material-symbols-outlined text-[18px]">arrow_back</span>
+              <span className="hidden sm:inline">Lobby</span>
             </button>
           )}
 
           <button
+            type="button"
             onClick={onToggleSound}
-            className={roundButton}
-            title={soundEnabled ? 'Mute Sound Effects' : 'Unmute Sound Effects'}
+            className={iconButton}
+            aria-label={soundEnabled ? 'Mute sound effects' : 'Unmute sound effects'}
+            aria-pressed={!soundEnabled}
+            title={soundEnabled ? 'Mute' : 'Unmute'}
           >
-            <span className="material-symbols-outlined text-xl leading-none">
+            <span aria-hidden className="material-symbols-outlined text-[20px]">
               {soundEnabled ? 'volume_up' : 'volume_off'}
             </span>
           </button>
 
-          <button onClick={onOpenSettings} className={roundButton} title="Table Preferences">
-            <span className="material-symbols-outlined text-xl leading-none">settings</span>
-          </button>
-
           <button
-            onClick={onOpenAbout}
-            className={`${roundButton} ${liveRoom ? 'max-sm:hidden' : ''}`}
-            title="About Whitejack"
+            type="button"
+            onClick={onOpenSettings}
+            className={iconButton}
+            aria-label="Table preferences"
+            title="Preferences"
           >
-            <span className="material-symbols-outlined text-xl leading-none">info</span>
+            <span aria-hidden className="material-symbols-outlined text-[20px]">tune</span>
           </button>
         </div>
       </div>

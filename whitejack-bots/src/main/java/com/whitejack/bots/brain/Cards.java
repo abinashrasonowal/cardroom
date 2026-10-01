@@ -22,6 +22,11 @@ final class Cards {
         return cards == null || cards.isEmpty() ? "none" : cards.stream().map(Card::toString).collect(Collectors.joining(" "));
     }
 
+    /** 0.4271 → "43%". */
+    static String pct(double share) {
+        return Math.round(share * 100) + "%";
+    }
+
     static <T> List<T> orEmpty(List<T> list) {
         return list == null ? List.of() : list;
     }

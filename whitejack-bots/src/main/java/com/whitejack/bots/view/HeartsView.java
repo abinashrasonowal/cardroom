@@ -16,6 +16,8 @@ public record HeartsView(
         List<PlayedCard> trick,
         String leader,
         String onClock,
+        List<PlayedCard> lastTrick,
+        String lastTrickWinner,
         String winner) {
 
     public record SeatView(int index, String id, String nick, int cardCount, int handPoints, int score,

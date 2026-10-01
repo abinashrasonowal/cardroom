@@ -84,39 +84,40 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
     if (gameId === 'poker') {
       return <PokerBoard view={game as PokerView} playerId={playerId} intent={intent} settings={settings} />;
     }
-    return <p className="text-sm text-slate-600">This client cannot render “{gameId}” yet.</p>;
+    return <p className="text-sm text-stone-600">This client cannot render “{gameId}” yet.</p>;
   };
 
   const headerButton =
-    'h-9 px-3 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:text-slate-950 hover:bg-slate-50 transition-colors flex items-center gap-1.5 cursor-pointer';
+    'h-9 px-2.5 rounded-md text-sm font-medium text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors flex items-center gap-1.5 cursor-pointer';
 
   // The room's identity and exits live in the navbar, so the table gets the whole page.
   const roomControls = (
     <div className="flex items-center gap-2 sm:gap-2.5 mr-1 sm:mr-2">
-      <span className="hidden lg:inline text-xs font-semibold text-slate-500 uppercase tracking-wider">
+      <span className="hidden lg:inline text-sm text-stone-500">
         {def?.name ?? 'Live room'}
       </span>
       <button
         type="button"
         onClick={copyInvite}
         title="Copy invite link"
-        className="h-9 pl-2.5 pr-2 rounded-lg bg-violet-50 border border-violet-100 text-violet-700 hover:bg-violet-100 transition-colors flex items-center gap-2 cursor-pointer"
+        aria-label={`Room ${room}, ${STATUS_LABEL[status]}. Copy invite link`}
+        className="h-8 pl-2.5 pr-2 rounded-md bg-white border border-stone-200 text-stone-800 hover:border-stone-300 transition-colors flex items-center gap-2 cursor-pointer"
       >
         <span
-          title={STATUS_LABEL[status]}
-          className={`w-2 h-2 rounded-full ${status === 'open' ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'}`}
+          aria-hidden
+          className={`w-1.5 h-1.5 rounded-full ${status === 'open' ? 'bg-felt-500' : 'bg-amber-500 animate-pulse'}`}
         />
-        <code className="font-mono-code font-bold text-xs tracking-wider">{room}</code>
-        <span className="material-symbols-outlined text-base leading-none">{copied ? 'check' : 'link'}</span>
+        <code className="font-mono-code text-xs tracking-wider">{room}</code>
+        <span aria-hidden className="material-symbols-outlined text-[16px] text-stone-400">{copied ? 'check' : 'link'}</span>
       </button>
       {isHost && (
         <button type="button" onClick={handleClose} className={headerButton} title="Close room for everyone">
-          <span className="material-symbols-outlined text-base leading-none">close</span>
+          <span aria-hidden className="material-symbols-outlined text-[18px]">close</span>
           <span className="hidden sm:inline">Close room</span>
         </button>
       )}
       <button type="button" onClick={handleLeave} className={headerButton} title="Leave room">
-        <span className="material-symbols-outlined text-base leading-none">logout</span>
+        <span aria-hidden className="material-symbols-outlined text-[18px]">logout</span>
         <span className="hidden sm:inline">Leave</span>
       </button>
     </div>
@@ -124,11 +125,11 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
 
   return (
     // A board in play spans the navbar's width; the waiting room stays a comfortable reading column.
-    <div className={`w-full mx-auto px-4 sm:px-8 flex flex-col gap-6 ${game ? 'max-w-[1560px]' : 'max-w-6xl'}`}>
+    <div className={`w-full mx-auto px-4 sm:px-8 flex flex-col gap-6 ${game ? 'max-w-[1440px]' : 'max-w-6xl'}`}>
       {slot && createPortal(roomControls, slot)}
 
       {status !== 'open' && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-semibold text-amber-800">
+        <div role="status" className="rounded-md border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-800">
           {STATUS_LABEL[status]}
         </div>
       )}
@@ -136,7 +137,7 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
       {error && (
         <div
           role="alert"
-          className={`rounded-xl border px-4 py-3 text-sm ${
+          className={`rounded-md border px-4 py-3 text-sm ${
             fatal ? 'border-red-200 bg-red-50 text-red-800' : 'border-amber-200 bg-amber-50 text-amber-800'
           }`}
         >

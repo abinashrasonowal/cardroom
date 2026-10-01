@@ -1,4 +1,5 @@
 import React from 'react';
+import { Dialog, dialogPrimaryButton } from '@/components/Dialog';
 import { TableSettings } from '@/types/game';
 import { soundFx } from '@/utils/audio';
 
@@ -50,173 +51,150 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-5 animate-scale-up">
-        {/* Header */}
-        <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-blue-600 text-xl">tune</span>
-            <h3 className="text-base font-bold text-slate-950 font-space uppercase">
-              Table & Card Preferences
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center text-lg transition-colors cursor-pointer"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Settings Form */}
-        <div className="flex flex-col gap-4 text-xs sm:text-sm">
-          {/* Table Felt Surface */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs text-slate-700 uppercase font-semibold">Table Felt Surface</span>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-              {[
-                { id: 'slate', name: 'Tournament', color: 'bg-slate-900 border-slate-700' },
-                { id: 'emerald', name: 'Emerald', color: 'bg-emerald-950 border-emerald-800' },
-                { id: 'navy', name: 'Velvet Navy', color: 'bg-blue-950 border-blue-900' },
-                { id: 'studio', name: 'Studio Light', color: 'bg-slate-100 border-slate-300' },
-              ].map((t) => (
+    <Dialog
+      title="Preferences"
+      description="Applied at every table you sit at."
+      onClose={onClose}
+      footer={
+        <button type="button" onClick={onClose} className={dialogPrimaryButton}>
+          Done
+        </button>
+      }
+    >
+      <div className="flex flex-col gap-6 text-sm">
+        <fieldset className="flex flex-col gap-2.5">
+          <legend className={groupLabel}>Table surface</legend>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {TABLE_THEMES.map((t) => {
+              const active = settings.tableTheme === t.id;
+              return (
                 <button
                   key={t.id}
-                  onClick={() => handleSelectTheme(t.id as TableSettings['tableTheme'])}
-                  className={`p-2 rounded-xl border flex flex-col items-center gap-1.5 transition-all cursor-pointer ${
-                    settings.tableTheme === t.id
-                      ? 'border-blue-600 ring-2 ring-blue-600/30'
-                      : 'border-slate-200 hover:border-slate-300'
-                  }`}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => handleSelectTheme(t.id)}
+                  className={`${option} ${active ? optionActive : optionIdle} p-1.5 flex flex-col gap-1.5`}
                 >
-                  <div className={`w-full h-8 rounded-lg ${t.color} border shadow-inner`} />
-                  <span className="text-[11px] font-semibold text-slate-800">{t.name}</span>
+                  <span aria-hidden className={`w-full h-9 rounded ${t.swatch}`} />
+                  <span className="text-[13px] font-medium text-stone-800 px-0.5">{t.name}</span>
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
+        </fieldset>
 
-          {/* Card Back Style */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs text-slate-700 uppercase font-semibold">Card Back Design</span>
-            <div className="grid grid-cols-3 gap-2">
-              {[
-                { id: 'geometric-blue', name: 'Royal Blue', desc: 'Lattice grid' },
-                { id: 'classic-cross', name: 'Navy Cross', desc: 'Linen weave' },
-                { id: 'crimson-diamond', name: 'Crimson', desc: 'Diamond dot' },
-              ].map((b) => (
+        <fieldset className="flex flex-col gap-2.5">
+          <legend className={groupLabel}>Card back</legend>
+          <div className="grid grid-cols-3 gap-2">
+            {CARD_BACKS.map((b) => {
+              const active = settings.cardBack === b.id;
+              return (
                 <button
                   key={b.id}
-                  onClick={() => handleSelectCardBack(b.id as TableSettings['cardBack'])}
-                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
-                    settings.cardBack === b.id
-                      ? 'border-blue-600 bg-blue-50/50 ring-2 ring-blue-600/30'
-                      : 'border-slate-200 hover:border-slate-300'
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => handleSelectCardBack(b.id)}
+                  className={`${option} ${active ? optionActive : optionIdle} px-3 py-2.5 text-left`}
+                >
+                  <span className="text-[13px] font-medium text-stone-900 block">{b.name}</span>
+                  <span className="text-xs text-stone-500 block">{b.desc}</span>
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
+
+        <div className="flex flex-col divide-y divide-stone-100 border-y border-stone-100">
+          <Row title="Four-color deck" detail="Black spades, red hearts, blue diamonds, green clubs.">
+            <Switch label="Four-color deck" on={settings.fourColorDeck} onToggle={handleToggleFourColor} />
+          </Row>
+
+          <Row title="Sort hand by" detail="How cards line up in your hand.">
+            <div role="radiogroup" aria-label="Sort hand by" className="flex items-center bg-stone-100 rounded-md p-0.5">
+              {(['suit', 'rank'] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  role="radio"
+                  aria-checked={settings.sortBy === key}
+                  onClick={() => handleToggleSort(key)}
+                  className={`h-7 px-3 rounded text-[13px] font-medium capitalize transition-colors cursor-pointer ${
+                    settings.sortBy === key ? 'bg-white text-stone-900 shadow-hairline' : 'text-stone-500 hover:text-stone-900'
                   }`}
                 >
-                  <span className="text-xs font-bold text-slate-900 block">{b.name}</span>
-                  <span className="text-[10px] text-slate-500 block">{b.desc}</span>
+                  {key}
                 </button>
               ))}
             </div>
-          </div>
+          </Row>
 
-          {/* 4-Color Deck Toggle */}
-          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-bold text-slate-900">4-Color Tournament Deck</span>
-              <span className="text-[11px] text-slate-500">
-                ♠ Black · ♥ Red · ♦ Blue · ♣ Green for rapid suit recognition
-              </span>
-            </div>
-            <button
-              onClick={handleToggleFourColor}
-              className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                settings.fourColorDeck ? 'bg-blue-600' : 'bg-slate-300'
-              }`}
-            >
-              <div
-                className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                  settings.fourColorDeck ? 'translate-x-5' : 'translate-x-0'
-                }`}
+          <Row title="Sound effects" detail="Card deals, clicks and turn cues.">
+            <Switch label="Sound effects" on={settings.soundEnabled} onToggle={handleToggleSound} />
+          </Row>
+
+          {settings.soundEnabled && (
+            <label className="flex items-center gap-3 py-3">
+              <span className="sr-only">Volume</span>
+              <span aria-hidden className="material-symbols-outlined text-[18px] text-stone-400">volume_down</span>
+              <input
+                type="range"
+                min="0.1"
+                max="1.0"
+                step="0.05"
+                value={settings.soundVolume}
+                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                className="flex-1 accent-stone-900 h-1 cursor-pointer"
               />
-            </button>
-          </div>
-
-          {/* Hand Sorting Preference */}
-          <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-            <div className="flex flex-col gap-0.5">
-              <span className="text-xs font-bold text-slate-900">Sort Hand By</span>
-              <span className="text-[11px] text-slate-500">
-                Organize cards in your hand automatically
-              </span>
-            </div>
-            <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-lg p-0.5">
-              <button
-                onClick={() => handleToggleSort('suit')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer ${
-                  settings.sortBy === 'suit' ? 'bg-blue-600 text-white' : 'text-slate-600'
-                }`}
-              >
-                Suit
-              </button>
-              <button
-                onClick={() => handleToggleSort('rank')}
-                className={`px-2.5 py-1 rounded text-xs font-semibold cursor-pointer ${
-                  settings.sortBy === 'rank' ? 'bg-blue-600 text-white' : 'text-slate-600'
-                }`}
-              >
-                Rank
-              </button>
-            </div>
-          </div>
-
-          {/* Sound Controls */}
-          <div className="flex flex-col gap-2 p-3 bg-slate-50 border border-slate-200 rounded-xl">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900">Tactile Sound Effects</span>
-              <button
-                onClick={handleToggleSound}
-                className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors cursor-pointer ${
-                  settings.soundEnabled ? 'bg-blue-600' : 'bg-slate-300'
-                }`}
-              >
-                <div
-                  className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform ${
-                    settings.soundEnabled ? 'translate-x-5' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-            </div>
-
-            {settings.soundEnabled && (
-              <div className="flex items-center gap-3 pt-1">
-                <span className="material-symbols-outlined text-sm text-slate-400">volume_down</span>
-                <input
-                  type="range"
-                  min="0.1"
-                  max="1.0"
-                  step="0.05"
-                  value={settings.soundVolume}
-                  onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                  className="flex-1 accent-blue-600 h-1 bg-slate-200 rounded"
-                />
-                <span className="material-symbols-outlined text-sm text-slate-600">volume_up</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="pt-2 border-t border-slate-200 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-5 py-2 rounded-xl bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-700 transition-colors shadow-sm cursor-pointer"
-          >
-            Apply & Close
-          </button>
+              <span aria-hidden className="material-symbols-outlined text-[18px] text-stone-400">volume_up</span>
+            </label>
+          )}
         </div>
       </div>
-    </div>
+    </Dialog>
   );
 };
+
+const groupLabel = 'text-[13px] font-medium text-stone-700 mb-2.5';
+const option = 'rounded-lg border transition-[border-color,box-shadow] cursor-pointer';
+const optionIdle = 'border-stone-200 hover:border-stone-300';
+const optionActive = 'border-stone-900 ring-1 ring-stone-900';
+
+const TABLE_THEMES: { id: TableSettings['tableTheme']; name: string; swatch: string }[] = [
+  { id: 'slate', name: 'Charcoal', swatch: 'bg-stone-900' },
+  { id: 'emerald', name: 'Felt', swatch: 'table-felt-pattern' },
+  { id: 'navy', name: 'Navy', swatch: 'bg-[#1b2433]' },
+  { id: 'studio', name: 'Light', swatch: 'bg-stone-100 border border-stone-200' },
+];
+
+const CARD_BACKS: { id: TableSettings['cardBack']; name: string; desc: string }[] = [
+  { id: 'geometric-blue', name: 'Ink', desc: 'Fine lattice' },
+  { id: 'classic-cross', name: 'Felt', desc: 'Crosshatch' },
+  { id: 'crimson-diamond', name: 'Oxblood', desc: 'Diamond dot' },
+];
+
+const Row: React.FC<{ title: string; detail: string; children: React.ReactNode }> = ({ title, detail, children }) => (
+  <div className="flex items-center justify-between gap-4 py-3">
+    <div className="flex flex-col gap-0.5 min-w-0">
+      <span className="text-sm font-medium text-stone-900">{title}</span>
+      <span className="text-[13px] text-stone-500">{detail}</span>
+    </div>
+    {children}
+  </div>
+);
+
+const Switch: React.FC<{ label: string; on: boolean; onToggle: () => void }> = ({ label, on, onToggle }) => (
+  <button
+    type="button"
+    role="switch"
+    aria-checked={on}
+    aria-label={label}
+    onClick={onToggle}
+    className={`w-9 h-5 shrink-0 flex items-center rounded-full p-0.5 transition-colors cursor-pointer ${
+      on ? 'bg-stone-900' : 'bg-stone-300'
+    }`}
+  >
+    <span
+      className={`bg-white w-4 h-4 rounded-full shadow-hairline transition-transform ${on ? 'translate-x-4' : 'translate-x-0'}`}
+    />
+  </button>
+);

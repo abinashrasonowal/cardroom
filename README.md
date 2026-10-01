@@ -1,6 +1,16 @@
 # whitejack
 A Multiplayer Card Game Platform
 
+## Games
+
+These run live on the server, with the server enforcing every rule:
+
+| Game | Players | Summary |
+| --- | --- | --- |
+| **Poker** | 2–8 | No-limit Texas Hold'em freezeout: 1,000 chips each, blinds 10/20 doubling every 10 hands, side pots for all-ins. Last player with chips wins. |
+| **Hearts** | 4 | Pass three cards, then duck every heart and the Q♠, or take all 26 points to shoot the moon. First to 100 ends it; lowest score wins. |
+| **Gin Rummy** | 2 | Build sets and runs, then knock at 10 deadwood or go gin; watch for the undercut. First to 100 wins. |
+
 ## Run with Docker
 
 ```sh

@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useIdentity } from '@/app/useIdentity';
 import { Footer } from '@/layout/Footer';
 import { Header } from '@/layout/Header';
-import { AboutModal } from '@/modals/AboutModal';
 import { SettingsModal } from '@/modals/SettingsModal';
 import { createRoom } from '@/network/api';
 import { LiveTable } from '@/pages/games/live/LiveTable';
+import { ABOUT_HASH, AboutPage } from '@/pages/about/AboutPage';
 import { GameTable } from '@/pages/games/offline/GameTable';
 import { JoinInvite } from '@/pages/lobby/JoinInvite';
 import { LobbyPage } from '@/pages/lobby/LobbyPage';
@@ -34,7 +34,7 @@ export default function App() {
     sortBy: 'suit',
   });
 
-  const [isAboutOpen, setIsAboutOpen] = useState<boolean>(false);
+  const [aboutOpen, setAboutOpen] = useState<boolean>(() => window.location.hash === ABOUT_HASH);
   const [isSettingsOpen, setIsSettingsOpen] = useState<boolean>(false);
 
   const { me, ensureMe } = useIdentity();
@@ -56,6 +56,16 @@ export default function App() {
   // Check URL hash for direct room code join: a six-character server code (#K7M2QX) opens the
   // live table; the older prefixed codes (#HRT-8429) still open the offline demos.
   useEffect(() => {
+    const onHash = () => {
+      setAboutOpen(window.location.hash === ABOUT_HASH);
+      window.scrollTo({ top: 0 });
+    };
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  useEffect(() => {
+    if (window.location.hash === ABOUT_HASH) return;
     const hash = window.location.hash.replace('#', '').trim().toUpperCase();
     if (ROOM_CODE.test(hash)) {
       setInvite(hash);
@@ -120,12 +130,19 @@ export default function App() {
   };
 
   return (
-    <div className="page-surface min-h-screen flex flex-col justify-between selection:bg-violet-600 selection:text-white font-sans">
+    <div className="min-h-dvh flex flex-col justify-between">
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-md focus:bg-stone-900 focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+      >
+        Skip to content
+      </a>
+
       {/* Top Header */}
       <Header
         soundEnabled={settings.soundEnabled}
         onToggleSound={handleToggleSound}
-        onOpenAbout={() => setIsAboutOpen(true)}
+        aboutActive={aboutOpen && live == null && currentScreen === 'lobby'}
         onOpenSettings={() => setIsSettingsOpen(true)}
         inGame={live != null || currentScreen === 'game'}
         gameTitle={live ? 'LIVE ROOM' : activeGameKey.toUpperCase()}
@@ -135,7 +152,7 @@ export default function App() {
       />
 
       {/* Main Content Area */}
-      <main className="w-full pt-28 pb-16 flex-1 flex flex-col">
+      <main id="main" className="w-full pt-24 pb-14 flex-1 flex flex-col">
         {live ? (
           me ? (
             <LiveTable
@@ -147,7 +164,7 @@ export default function App() {
               onLeave={handleLeaveTable}
             />
           ) : (
-            <p className="text-center text-sm text-slate-600">Connecting to the whitejack server…</p>
+            <p role="status" className="text-center text-sm text-stone-500">Connecting to the server…</p>
           )
         ) : invite ? (
           <JoinInvite
@@ -159,6 +176,8 @@ export default function App() {
             }}
             onCancel={handleLeaveTable}
           />
+        ) : aboutOpen && currentScreen === 'lobby' ? (
+          <AboutPage />
         ) : currentScreen === 'lobby' ? (
           <LobbyPage
             initialNickname={activePlayerName}
@@ -180,10 +199,9 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer />
+      <Footer wide={live != null || currentScreen === 'game'} />
 
       {/* Modals */}
-      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

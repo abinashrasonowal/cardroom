@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { CardFan, suitFromGlyph } from '@/components/CardFan';
-import { ACCENTS } from '@/config/accents';
 import { GameDefinition, RoomRules } from '@/types/game';
 import { soundFx } from '@/utils/audio';
 
@@ -16,10 +15,10 @@ interface ConfigureRoomPageProps {
 }
 
 const ruleRow =
-  'flex items-center gap-2.5 text-slate-700 text-xs sm:text-sm bg-white px-3.5 py-2.5 rounded-lg border border-slate-200 cursor-pointer hover:text-slate-950 hover:border-slate-300 transition-colors select-none';
-const checkbox = 'rounded border-slate-300 text-violet-600 focus:ring-0 focus:ring-offset-0 bg-white';
-const sectionTitle = 'flex items-center gap-2 text-sm text-slate-900 font-bold';
-const card = 'bg-white border border-slate-200 rounded-2xl p-5 shadow-sm flex flex-col gap-4';
+  'flex items-center gap-3 text-sm text-stone-700 py-2.5 cursor-pointer hover:text-stone-900 select-none';
+const checkbox = 'h-4 w-4 rounded border-stone-300 accent-stone-900 cursor-pointer';
+const sectionTitle = 'font-display text-base font-semibold text-stone-900';
+const fieldLabel = 'text-[13px] font-medium text-stone-700';
 
 /** The page behind a game card's Play button: rules, house rules, host name, and launch. */
 export const ConfigureRoomPage: React.FC<ConfigureRoomPageProps> = ({
@@ -35,8 +34,6 @@ export const ConfigureRoomPage: React.FC<ConfigureRoomPageProps> = ({
   const [advancedOpen, setAdvancedOpen] = useState<boolean>(false);
   const [liveBusy, setLiveBusy] = useState<boolean>(false);
   const [liveError, setLiveError] = useState<string | null>(null);
-
-  const accent = ACCENTS[def.accent];
 
   const handleCopyCode = () => {
     soundFx.playClick();
@@ -63,130 +60,100 @@ export const ConfigureRoomPage: React.FC<ConfigureRoomPageProps> = ({
   };
 
   const stats = [
-    { icon: 'group', label: 'Players', value: def.playerCountLabel, tint: 'text-violet-500' },
-    def.targetScore
-      ? { icon: 'emoji_events', label: 'Target Score', value: def.targetScore, tint: 'text-amber-500' }
-      : null,
-    def.special
-      ? { icon: 'workspace_premium', label: 'Special', value: def.special, tint: 'text-amber-500' }
-      : null,
-  ].filter((s): s is { icon: string; label: string; value: string; tint: string } => s !== null);
+    { label: 'Players', value: def.playerCountLabel },
+    def.targetScore ? { label: 'Plays to', value: def.targetScore } : null,
+    def.special ? { label: 'Signature', value: def.special } : null,
+  ].filter((s): s is { label: string; value: string } => s !== null);
 
   return (
-    <div className="w-full max-w-[1120px] mx-auto px-4 sm:px-8 flex flex-col gap-5">
-      <button
-        type="button"
-        onClick={onBack}
-        className="self-start flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-violet-700 transition-colors cursor-pointer"
-      >
-        <span className="material-symbols-outlined text-lg">arrow_back</span>
-        Back to games
-      </button>
+    <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 flex flex-col gap-8 animate-rise">
+      <nav aria-label="Breadcrumb">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-1 -ml-1.5 px-1.5 py-1 rounded-md text-[13px] font-medium text-stone-500 hover:text-stone-900 hover:bg-stone-100 transition-colors cursor-pointer"
+        >
+          <span aria-hidden className="material-symbols-outlined text-[18px]">arrow_back</span>
+          All games
+        </button>
+      </nav>
 
       {/* Game header */}
-      <header
-        className={`rounded-2xl border p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center gap-5 ${accent.surface}`}
-      >
-        <div className="relative flex items-center shrink-0">
-          <span className={`absolute inset-0 m-auto w-20 h-20 rounded-full blur-2xl ${accent.glow}`} />
-          <CardFan suit={suitFromGlyph(def.suitGlyph)} className="relative" />
+      <header className="flex flex-col sm:flex-row sm:items-center gap-6 pb-8 border-b border-stone-200">
+        <div className="shrink-0 rounded-xl bg-stone-100 w-32 h-32 flex items-center justify-center">
+          <CardFan suit={suitFromGlyph(def.suitGlyph)} />
         </div>
 
-        <div className="min-w-0">
-          <div className="flex items-center flex-wrap gap-1.5 mb-2">
-            {def.serverGameId && (
-              <span className="text-[10px] bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full">
-                Live
-              </span>
-            )}
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${accent.chip}`}>
-              {def.playerCountLabel}
+        <div className="min-w-0 flex flex-col gap-2">
+          {def.serverGameId && (
+            <span className="flex items-center gap-1.5 text-[13px] font-medium text-felt-700">
+              <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-felt-500" />
+              Online multiplayer
             </span>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${accent.chip}`}>
-              {def.tag}
-            </span>
-          </div>
-          <h1 className="font-space text-2xl sm:text-3xl font-bold text-slate-950 leading-tight">
+          )}
+          <h1 className="font-display text-3xl sm:text-4xl font-semibold text-stone-900 leading-tight">
             {def.name}
           </h1>
-          <p className="text-sm text-slate-600 mt-1.5 leading-relaxed max-w-2xl">{def.description}</p>
+          <p className="text-[15px] text-stone-600 leading-relaxed max-w-[60ch]">{def.description}</p>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] gap-10 lg:gap-14 items-start">
         {/* Rules & scoring */}
-        <section className={card}>
-          <div className="flex items-center justify-between gap-2">
-            <span className={sectionTitle}>
-              <span className="material-symbols-outlined text-base text-red-500">menu_book</span>
-              Game Rules &amp; Scoring
-            </span>
-            <span className="text-[11px] text-violet-700 bg-violet-50 border border-violet-100 px-2.5 py-0.5 rounded-full font-semibold shrink-0">
-              {def.shortName}
-            </span>
-          </div>
+        <section aria-labelledby="rules-heading" className="flex flex-col gap-5">
+          <h2 id="rules-heading" className={sectionTitle}>
+            How it plays
+          </h2>
 
-          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed bg-slate-50 border border-slate-100 rounded-xl p-4">
-            {def.rulesOverview}
-          </p>
+          <p className="text-sm text-stone-600 leading-[1.7] max-w-[65ch]">{def.rulesOverview}</p>
 
-          <div className="flex items-stretch">
-            {stats.map((stat, i) => (
-              <div
-                key={stat.label}
-                className={`flex items-center gap-2 flex-1 min-w-0 ${
-                  i > 0 ? 'border-l border-slate-200 pl-3' : ''
-                }`}
-              >
-                <span className={`material-symbols-outlined text-lg shrink-0 ${stat.tint}`}>
-                  {stat.icon}
-                </span>
-                <div className="min-w-0">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold tracking-wide truncate">
-                    {stat.label}
-                  </div>
-                  <div className="text-xs font-bold text-slate-900 truncate">{stat.value}</div>
-                </div>
+          <dl className="grid grid-flow-col auto-cols-fr border-y border-stone-200 divide-x divide-stone-200">
+            {stats.map((stat) => (
+              <div key={stat.label} className="py-3 px-3 first:pl-0 min-w-0">
+                <dt className="text-xs text-stone-500 truncate">{stat.label}</dt>
+                <dd className="text-sm font-medium text-stone-900 truncate tabular mt-0.5">{stat.value}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </section>
 
         {/* Room setup */}
-        <section className={card}>
-          <span className={sectionTitle}>
-            <span className="material-symbols-outlined text-base text-violet-600">settings</span>
-            Room Settings
-          </span>
+        <section
+          aria-labelledby="setup-heading"
+          className="bg-white border border-stone-200 rounded-xl p-5 sm:p-6 shadow-raised flex flex-col gap-5"
+        >
+          <h2 id="setup-heading" className={sectionTitle}>
+            Set up your room
+          </h2>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wide">
-              Your Display Name (Guest Host)
-            </label>
-            <div className="relative">
-              <span className="material-symbols-outlined text-base text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                person
-              </span>
-              <input
-                type="text"
-                value={hostName}
-                onChange={(e) => onHostNameChange(e.target.value)}
-                placeholder="e.g. Julian"
-                className="w-full bg-white border border-slate-300 focus:border-violet-600 focus:ring-1 focus:ring-violet-600 rounded-lg pl-10 pr-3 h-11 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-colors"
-              />
-            </div>
-          </div>
+          <label className="flex flex-col gap-1.5">
+            <span className={fieldLabel}>Your name</span>
+            <input
+              type="text"
+              name="nickname"
+              autoComplete="nickname"
+              spellCheck={false}
+              maxLength={24}
+              value={hostName}
+              onChange={(e) => onHostNameChange(e.target.value)}
+              placeholder="Julian…"
+              className="w-full bg-white border border-stone-300 hover:border-stone-400 focus:border-stone-900 focus:ring-2 focus:ring-stone-900/10 rounded-md px-3 h-10 text-sm text-stone-900 placeholder:text-stone-400 outline-none transition-[border-color,box-shadow]"
+            />
+          </label>
 
           {/* Advanced options */}
-          <div className="border border-slate-200 rounded-xl">
+          <div className="border-t border-stone-200 -mx-5 sm:-mx-6 px-5 sm:px-6">
             <button
               type="button"
               onClick={() => setAdvancedOpen((open) => !open)}
-              className="w-full flex items-center justify-between px-4 py-3 text-sm font-semibold text-slate-800 cursor-pointer"
+              aria-expanded={advancedOpen}
+              aria-controls="advanced-options"
+              className="w-full flex items-center justify-between py-3 text-sm font-medium text-stone-700 hover:text-stone-900 cursor-pointer"
             >
-              <span>Advanced Options</span>
+              <span>Advanced options</span>
               <span
-                className={`material-symbols-outlined text-lg text-slate-400 transition-transform ${
+                aria-hidden
+                className={`material-symbols-outlined text-[20px] text-stone-400 transition-transform ${
                   advancedOpen ? 'rotate-180' : ''
                 }`}
               >
@@ -195,12 +162,10 @@ export const ConfigureRoomPage: React.FC<ConfigureRoomPageProps> = ({
             </button>
 
             {advancedOpen && (
-              <div className="px-4 pb-4 flex flex-col gap-3 border-t border-slate-100 pt-3">
+              <div id="advanced-options" className="pb-4 flex flex-col gap-3">
                 {!def.serverGameId && def.rule1 && (
-                  <div className="flex flex-col gap-2">
-                    <label className="text-[10px] text-slate-500 uppercase font-bold tracking-wide">
-                      Room Rule Toggles
-                    </label>
+                  <fieldset className="flex flex-col divide-y divide-stone-100">
+                    <legend className={`${fieldLabel} mb-1`}>House rules</legend>
                     <label className={ruleRow}>
                       <input type="checkbox" checked={rules.rule1} onChange={() => onToggleRule(1)} className={checkbox} />
                       <span>{def.rule1}</span>
@@ -213,44 +178,51 @@ export const ConfigureRoomPage: React.FC<ConfigureRoomPageProps> = ({
                       <input type="checkbox" checked={rules.rule3} onChange={() => onToggleRule(3)} className={checkbox} />
                       <span>{def.rule3}</span>
                     </label>
-                  </div>
+                  </fieldset>
                 )}
 
-                <div className="flex items-center justify-between bg-slate-50 px-3.5 py-2 rounded-lg border border-slate-200">
+                <div className="flex items-center justify-between gap-3 bg-stone-50 px-3 py-2 rounded-md border border-stone-200">
+                  <span className="text-[13px] text-stone-500 shrink-0">Room code</span>
                   <div className="flex items-center gap-2 min-w-0">
-                    <span className="text-[10px] text-slate-500 uppercase font-bold tracking-wide shrink-0">
-                      Room Code
-                    </span>
-                    <code className="text-sm font-mono-code text-violet-600 font-bold tracking-wider truncate">
-                      {def.serverGameId ? 'Assigned on launch' : def.defaultCode}
+                    <code className="text-[13px] font-mono-code text-stone-900 truncate">
+                      {def.serverGameId ? 'Assigned when created' : def.defaultCode}
                     </code>
+                    {!def.serverGameId && (
+                      <button
+                        type="button"
+                        onClick={handleCopyCode}
+                        aria-label="Copy room code"
+                        className="h-7 w-7 rounded flex items-center justify-center text-stone-400 hover:text-stone-900 hover:bg-stone-200 transition-colors cursor-pointer"
+                      >
+                        <span aria-hidden className="material-symbols-outlined text-[16px]">
+                          {copied ? 'check' : 'content_copy'}
+                        </span>
+                      </button>
+                    )}
                   </div>
-                  {!def.serverGameId && (
-                    <button
-                      type="button"
-                      onClick={handleCopyCode}
-                      className="material-symbols-outlined text-sm text-slate-400 hover:text-violet-600 transition-colors cursor-pointer"
-                      title="Copy Room Code"
-                    >
-                      {copied ? 'done' : 'content_copy'}
-                    </button>
-                  )}
                 </div>
               </div>
             )}
           </div>
 
-          <button
-            type="button"
-            onClick={handleLaunch}
-            disabled={liveBusy}
-            className="w-full py-3.5 rounded-xl bg-violet-600 text-white text-sm font-bold flex items-center justify-center gap-2 hover:bg-violet-700 transition-all duration-150 shadow-md shadow-violet-200 cursor-pointer active:scale-[0.99] disabled:opacity-70"
-          >
-            <span className="material-symbols-outlined text-lg">add_circle</span>
-            <span>{liveBusy ? 'Opening room…' : 'Create Room'}</span>
-            {!liveBusy && <span className="material-symbols-outlined text-lg">arrow_forward</span>}
-          </button>
-          {liveError && <p className="text-xs text-red-700 px-1">{liveError}</p>}
+          <div className="flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={handleLaunch}
+              disabled={liveBusy}
+              className="w-full h-11 rounded-md bg-stone-900 text-white text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-stone-800 transition-[background-color,transform] cursor-pointer active:scale-[0.99] disabled:opacity-60 disabled:cursor-wait"
+            >
+              {liveBusy ? 'Creating room…' : 'Create room'}
+              {!liveBusy && <span aria-hidden className="material-symbols-outlined text-[18px]">arrow_forward</span>}
+            </button>
+            <p aria-live="polite" className="text-[13px] min-h-5">
+              {liveError ? (
+                <span className="text-red-700">{liveError}. Check your connection and try again.</span>
+              ) : (
+                <span className="text-stone-500">You’ll get a link to share once the room is open.</span>
+              )}
+            </p>
+          </div>
         </section>
       </div>
     </div>

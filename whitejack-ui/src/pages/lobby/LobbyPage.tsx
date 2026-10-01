@@ -83,24 +83,20 @@ export const LobbyPage: React.FC<LobbyPageProps> = ({
   }
 
   return (
-    <div className="w-full max-w-[1560px] mx-auto px-4 sm:px-8 flex flex-col gap-6">
+    <div className="w-full max-w-[1200px] mx-auto px-4 sm:px-6 flex flex-col gap-12 sm:gap-14">
       <QuickJoin onJoin={onJoinRoom} />
 
-      <section className="bg-white border border-slate-200 rounded-2xl p-5 sm:p-6 shadow-sm flex flex-col gap-5">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-2.5">
-            <span className="material-symbols-outlined text-violet-600 text-2xl">
-              stadia_controller
-            </span>
-            <h2 className="font-space text-2xl sm:text-3xl font-bold text-slate-950">
-              Select a Card Game
-            </h2>
-          </div>
+      <section aria-labelledby="games-heading" className="flex flex-col gap-4">
+        <div className="flex items-baseline justify-between gap-4 border-b border-stone-200 pb-3">
+          <h2 id="games-heading" className="font-display text-xl font-semibold text-stone-900">
+            Start a table
+          </h2>
+          <span className="max-sm:hidden text-[13px] text-stone-500">Choose a game to set up a room</span>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-          {games.map((def) => (
-            <GameCard key={def.key} def={def} onOpen={() => handleOpenGame(def.key)} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          {games.map((def, i) => (
+            <GameCard key={def.key} def={def} index={i} onOpen={() => handleOpenGame(def.key)} />
           ))}
         </div>
       </section>

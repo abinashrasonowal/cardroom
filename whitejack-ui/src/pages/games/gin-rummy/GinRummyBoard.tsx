@@ -42,7 +42,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
 
   const discard = (knock: boolean) => {
     if (!selected) return;
-    soundFx.playCardDeal();
+    soundFx.playCardPlay();
     intent({ type: 'discard', card: selected, knock });
   };
 
@@ -75,7 +75,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
   );
 
   const pileClass = (active: boolean) =>
-    `rounded-md ${active ? 'ring-2 ring-blue-400 cursor-pointer hover:-translate-y-1 transition-transform' : 'cursor-default'}`;
+    `rounded-md ${active ? 'ring-2 ring-felt-400 cursor-pointer hover:-translate-y-1 transition-transform' : 'cursor-default'}`;
 
   return (
     // Fills the viewport between navbar and footer on wide screens: table and hand on the left,
@@ -83,10 +83,10 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem] items-start">
       <div className="flex flex-col gap-4 min-w-0 lg:min-h-[calc(100dvh-15rem)]">
         {/* Table: the opponent across, the stock and discard between you */}
-        <section className="flex-1 rounded-2xl bg-slate-900 p-3 sm:p-5 flex flex-col items-center justify-between gap-5">
+        <section className="flex-1 rounded-xl bg-stone-900 p-3 sm:p-5 flex flex-col items-center justify-between gap-5">
           <SeatBadge seat={opponent} view={view} />
 
-          <div className="flex items-end gap-8 sm:gap-12 rounded-2xl bg-slate-800/60 border border-slate-700/70 px-6 sm:px-10 py-5">
+          <div className="flex items-end gap-8 sm:gap-12 rounded-xl bg-stone-800/60 border border-stone-700/70 px-6 sm:px-10 py-5">
             <div className="flex flex-col items-center gap-2">
               <button
                 type="button"
@@ -97,7 +97,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
               >
                 <CardView faceDown cardBack={settings.cardBack} />
               </button>
-              <span className="text-xs text-slate-300">Stock · {view.stockCount}</span>
+              <span className="text-xs text-stone-300">Stock · {view.stockCount}</span>
             </div>
             <div className="flex flex-col items-center gap-2">
               <button
@@ -110,10 +110,10 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
                 {view.discardTop ? (
                   <CardView card={toUiCard(view.discardTop)} cardBack={settings.cardBack} fourColor={settings.fourColorDeck} />
                 ) : (
-                  <div className="w-16 h-[5.6rem] sm:w-18 sm:h-[6.3rem] md:w-20 md:h-28 rounded-md border-2 border-dashed border-slate-600" />
+                  <div className="w-16 h-[5.6rem] sm:w-18 sm:h-[6.3rem] md:w-20 md:h-28 rounded-md border-2 border-dashed border-stone-600" />
                 )}
               </button>
-              <span className="text-xs text-slate-300">Discard · {view.discardCount}</span>
+              <span className="text-xs text-stone-300">Discard · {view.discardCount}</span>
             </div>
           </div>
 
@@ -122,15 +122,15 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
 
         {/* Your cards, grouped the way they would be laid down */}
         <section
-          className={`rounded-2xl border px-3 sm:px-5 pt-3 pb-4 flex flex-col gap-3 bg-slate-900 ${
-            myTurn ? 'border-blue-400 ring-2 ring-blue-400/60' : 'border-slate-900'
+          className={`rounded-xl border px-3 sm:px-5 pt-3 pb-4 flex flex-col gap-3 bg-stone-900 ${
+            myTurn ? 'border-felt-400 ring-2 ring-felt-400/60' : 'border-stone-900'
           }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-2 min-h-9">
             <span className="text-sm font-semibold text-white">
               Your hand
               {view.myMelds && (
-                <span className="ml-2 text-xs font-normal text-slate-400">deadwood {view.myMelds.deadwoodPoints}</span>
+                <span className="ml-2 text-xs font-normal text-stone-400">deadwood {view.myMelds.deadwoodPoints}</span>
               )}
             </span>
             {discarding && (
@@ -139,7 +139,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
                   type="button"
                   onClick={() => discard(false)}
                   disabled={!selected}
-                  className="h-9 px-4 rounded-lg bg-slate-700 text-white text-xs font-bold uppercase tracking-wider hover:bg-slate-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="h-9 px-4 rounded-lg bg-stone-700 text-white text-sm font-medium hover:bg-stone-600 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                 >
                   Discard
                 </button>
@@ -147,7 +147,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
                   <button
                     type="button"
                     onClick={() => discard(true)}
-                    className="h-9 px-4 rounded-lg bg-emerald-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-emerald-500 cursor-pointer"
+                    className="h-9 px-4 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-500 cursor-pointer"
                   >
                     Gin!
                   </button>
@@ -157,7 +157,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
                     onClick={() => discard(true)}
                     disabled={!contains(view.knockDiscards, selected)}
                     title={view.knockDiscards.length === 0 ? 'Knocking needs 10 or less deadwood after your discard' : undefined}
-                    className="h-9 px-4 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                    className="h-9 px-4 rounded-lg bg-felt-600 text-white text-sm font-medium hover:bg-felt-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   >
                     Knock
                   </button>
@@ -175,25 +175,25 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
                 </div>
               ))}
               {view.myMelds.deadwood.length > 0 && (
-                <div className="flex rounded-xl border border-dashed border-slate-600 p-1.5">{view.myMelds.deadwood.map(myCard)}</div>
+                <div className="flex rounded-xl border border-dashed border-stone-600 p-1.5">{view.myMelds.deadwood.map(myCard)}</div>
               )}
             </div>
           ) : (
-            <span className="text-sm text-slate-400 py-8 text-center">Watching.</span>
+            <span className="text-sm text-stone-400 py-8 text-center">Watching.</span>
           )}
-          <p className="text-xs text-slate-400">Green groups are melds. Cards in the dashed group count as deadwood.</p>
+          <p className="text-xs text-stone-400">Green groups are melds. Cards in the dashed group count as deadwood.</p>
         </section>
       </div>
 
       {/* Sidebar: where the hand stands, the scores, then how the last hand ended */}
       <aside className="flex flex-col gap-4 lg:sticky lg:top-28">
-        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
+        <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
-            <span className="text-slate-600">{nickOf(view.dealer)} dealt</span>
+            <span className="font-semibold font-display text-stone-900">Hand {view.hand + 1}</span>
+            <span className="text-stone-600">{nickOf(view.dealer)} dealt</span>
           </div>
           <div className="flex flex-wrap gap-1.5">
-            <span className="text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+            <span className="text-xs text-stone-600 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">
               First to 100
             </span>
             {view.myMelds && (
@@ -204,7 +204,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
           </div>
           <p
             className={`text-sm font-semibold rounded-lg px-3 py-2 ${
-              myTurn ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600'
+              myTurn ? 'bg-felt-50 text-felt-700' : 'bg-stone-50 text-stone-600'
             }`}
           >
             {status()}
@@ -212,30 +212,31 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
         </section>
 
         {view.phase === 'GAME_OVER' && (
-          <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 font-bold font-space text-slate-950">
-            🏆 {nickOf(view.winner)} {view.winner === playerId ? 'win' : 'wins'} with{' '}
+          <section role="status" className="rounded-xl border border-felt-200 bg-felt-50 p-4 font-semibold font-display text-felt-900 flex items-center gap-2">
+            <span aria-hidden className="material-symbols-outlined text-[20px] text-felt-600">trophy</span>
+            {nickOf(view.winner)} {view.winner === playerId ? 'win' : 'wins'} with{' '}
             {view.seats.find((s) => s.id === view.winner)?.score} points
           </section>
         )}
 
-        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-2">
-          <h3 className="font-bold font-space text-slate-950">Scores</h3>
+        <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-2">
+          <h3 className="font-semibold font-display text-stone-900">Scores</h3>
           {/* One row per player, so the sidebar never overflows however many hands are played. */}
-          <ul className="flex flex-col divide-y divide-slate-100">
+          <ul className="flex flex-col divide-y divide-stone-100">
             {view.seats.map((s, j) => (
               <li key={s.id} className="py-2 flex items-center justify-between gap-3">
                 <div className="flex flex-col min-w-0">
-                  <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-blue-700' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-felt-700' : 'text-stone-900'}`}>
                     {s.nick}
-                    {s.id === playerId && <span className="text-xs font-normal text-slate-500"> (you)</span>}
+                    {s.id === playerId && <span className="text-xs font-normal text-stone-500"> (you)</span>}
                   </span>
                   {view.history.length > 0 && (
-                    <span className="text-xs text-slate-500 font-mono-code truncate">
+                    <span className="text-xs text-stone-500 font-mono-code truncate">
                       {view.history.map((row) => row[j]).join(' · ')}
                     </span>
                   )}
                 </div>
-                <span className="text-lg font-bold font-mono-code text-slate-950">{s.score}</span>
+                <span className="text-lg font-bold font-mono-code text-stone-950">{s.score}</span>
               </li>
             ))}
           </ul>
@@ -267,8 +268,8 @@ const LastHand: React.FC<{ result: GinHandResult; nickOf: (id: string | null) =>
     />
   );
   return (
-    <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
-      <h3 className="text-sm font-bold font-space text-slate-950">
+    <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-3">
+      <h3 className="text-sm font-semibold font-display text-stone-900">
         Last hand:{' '}
         {result.outcome === 'DEAD'
           ? 'the stock ran out — no score'
@@ -276,7 +277,7 @@ const LastHand: React.FC<{ result: GinHandResult; nickOf: (id: string | null) =>
       </h3>
       {result.hands.map((hand) => (
         <div key={hand.player} className="flex flex-col gap-1.5">
-          <span className="text-xs font-semibold text-slate-700">
+          <span className="text-xs font-semibold text-stone-700">
             {nickOf(hand.player)} · deadwood {hand.deadwoodPoints}
           </span>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -286,13 +287,13 @@ const LastHand: React.FC<{ result: GinHandResult; nickOf: (id: string | null) =>
               </div>
             ))}
             {hand.laidOff.length > 0 && (
-              <div className="flex items-center rounded-lg border border-blue-200 bg-blue-50/60 p-1">
-                <span className="text-[10px] font-semibold text-blue-700 px-1">laid off</span>
+              <div className="flex items-center rounded-lg border border-felt-200 bg-felt-50/60 p-1">
+                <span className="text-[10px] font-semibold text-felt-700 px-1">laid off</span>
                 <div className="flex">{hand.laidOff.map(small)}</div>
               </div>
             )}
             {hand.deadwood.length > 0 && (
-              <div className="flex rounded-lg border border-dashed border-slate-300 p-1">{hand.deadwood.map(small)}</div>
+              <div className="flex rounded-lg border border-dashed border-stone-300 p-1">{hand.deadwood.map(small)}</div>
             )}
           </div>
         </div>
@@ -307,15 +308,15 @@ const SeatBadge: React.FC<{ seat: GinSeat | undefined; view: GinView; you?: bool
   return (
     <div
       className={`rounded-xl px-2.5 sm:px-3 py-2 text-white border min-w-0 ${
-        onClock ? 'border-blue-400 bg-blue-600/30 ring-2 ring-blue-400' : 'border-slate-700 bg-slate-800'
+        onClock ? 'border-felt-400 bg-felt-600/30 ring-2 ring-felt-400' : 'border-stone-700 bg-stone-800'
       }`}
     >
       <div className="flex items-center gap-2 text-sm font-semibold truncate">
         {seat.nick}
-        {you && <span className="text-xs font-normal text-slate-300">(you)</span>}
+        {you && <span className="text-xs font-normal text-stone-300">(you)</span>}
         {seat.id === view.dealer && <span className="text-xs font-normal text-amber-300">dealer</span>}
       </div>
-      <div className="text-[11px] sm:text-xs text-slate-300">
+      <div className="text-[11px] sm:text-xs text-stone-300">
         {seat.cardCount} cards · {seat.score} pts
       </div>
     </div>

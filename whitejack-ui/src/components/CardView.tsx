@@ -165,20 +165,21 @@ export const CardView: React.FC<CardViewProps> = ({
   }[size];
 
   if (faceDown || !card) {
+    // Muted, print-like backs: ink lattice (default), table-felt crosshatch, oxblood diamonds.
     const backPattern = () => {
       if (cardBack === 'crimson-diamond') {
-        return 'bg-red-700 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:6px_6px]';
+        return 'bg-[#6b1f26] bg-[radial-gradient(rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:6px_6px]';
       }
       if (cardBack === 'classic-cross') {
-        return 'bg-blue-900 bg-[repeating-linear-gradient(45deg,#1d4ed8_0,#1d4ed8_1px,transparent_0,transparent_5px)]';
+        return 'bg-felt-800 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.09)_0,rgba(255,255,255,0.09)_1px,transparent_0,transparent_5px),repeating-linear-gradient(-45deg,rgba(255,255,255,0.09)_0,rgba(255,255,255,0.09)_1px,transparent_0,transparent_5px)]';
       }
-      return 'bg-blue-600 bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.2)_1px,transparent_1px)] [background-size:8px_8px]';
+      return 'bg-stone-800 bg-[repeating-linear-gradient(45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_1px,transparent_0,transparent_6px),repeating-linear-gradient(-45deg,rgba(255,255,255,0.08)_0,rgba(255,255,255,0.08)_1px,transparent_0,transparent_6px)]';
     };
 
     // A white margin round the pattern, as on a printed card.
     return (
       <div
-        className={`${sizeClasses} shrink-0 bg-white border border-slate-300 ${size === 'sm' ? 'p-0.5' : 'p-1'} shadow-[0_1px_3px_rgba(15,23,42,0.25)] select-none ${className}`}
+        className={`${sizeClasses} shrink-0 bg-white border border-stone-300 ${size === 'sm' ? 'p-0.5' : 'p-1'} shadow-[0_1px_3px_rgba(15,23,42,0.25)] select-none ${className}`}
         title={tooltip}
       >
         <div className={`w-full h-full rounded-[3px] border border-black/10 ${backPattern()}`} />
@@ -192,14 +193,14 @@ export const CardView: React.FC<CardViewProps> = ({
         case 'hearts':
           return 'text-[#c8102e]';
         case 'spades':
-          return 'text-slate-950';
+          return 'text-stone-950';
         case 'diamonds':
-          return 'text-blue-700';
+          return 'text-[#1f5fa8]';
         case 'clubs':
           return 'text-emerald-700';
       }
     }
-    return suit === 'hearts' || suit === 'diamonds' ? 'text-[#c8102e]' : 'text-slate-950';
+    return suit === 'hearts' || suit === 'diamonds' ? 'text-[#c8102e]' : 'text-stone-950';
   };
 
   const suitGlyphs: Record<Suit, string> = {
@@ -220,10 +221,10 @@ export const CardView: React.FC<CardViewProps> = ({
         ${getSuitColor(card.suit)}
         ${
           selected
-            ? '-translate-y-4 border-blue-500 ring-2 ring-blue-500 shadow-[0_10px_20px_rgba(15,23,42,0.3)]'
+            ? '-translate-y-4 border-felt-500 ring-2 ring-felt-500 shadow-[0_10px_20px_rgba(15,23,42,0.3)]'
             : disabled
-            ? 'cursor-not-allowed border-slate-300 shadow-[0_1px_2px_rgba(15,23,42,0.2)]'
-            : `border-slate-300 shadow-[0_1px_3px_rgba(15,23,42,0.25)] ${
+            ? 'cursor-not-allowed border-stone-300 shadow-[0_1px_2px_rgba(15,23,42,0.2)]'
+            : `border-stone-300 shadow-[0_1px_3px_rgba(15,23,42,0.25)] ${
                 onClick ? 'hover:-translate-y-2 hover:shadow-[0_8px_16px_rgba(15,23,42,0.25)] cursor-pointer' : ''
               }`
         }
@@ -233,7 +234,7 @@ export const CardView: React.FC<CardViewProps> = ({
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" fill="currentColor" aria-hidden="true">
         <CardFace rank={card.rank} suit={card.suit} compact={size === 'sm'} />
       </svg>
-      {disabled && <div className="absolute inset-0 bg-slate-900/20" />}
+      {disabled && <div className="absolute inset-0 bg-stone-900/20" />}
     </div>
   );
 };

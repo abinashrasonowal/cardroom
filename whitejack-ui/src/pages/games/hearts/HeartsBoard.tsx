@@ -55,7 +55,7 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
         isSelected(card) ? prev.filter((c) => !sameCard(c, card)) : prev.length < 3 ? [...prev, card] : prev
       );
     } else if (myTurn && isLegal(card)) {
-      soundFx.playCardDeal();
+      soundFx.playCardPlay();
       intent({ type: 'play', card });
     }
   };
@@ -85,7 +85,7 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
     <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_20rem] xl:grid-cols-[minmax(0,1fr)_22rem] items-start">
       <div className="flex flex-col gap-4 min-w-0 lg:min-h-[calc(100dvh-15rem)]">
         {/* Table: all four seats round the trick */}
-        <section className="flex-1 rounded-2xl bg-slate-900 p-3 sm:p-5 grid grid-cols-[1fr_auto_1fr] grid-rows-[auto_1fr_auto] items-center gap-3">
+        <section className="flex-1 rounded-xl bg-stone-900 p-3 sm:p-5 grid grid-cols-[1fr_auto_1fr] grid-rows-[auto_1fr_auto] items-center gap-3">
           <div className="col-start-2 row-start-1 justify-self-center">
             <SeatBadge seat={seatAt('top')} view={view} />
           </div>
@@ -97,7 +97,7 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
             <SeatBadge seat={seatAt('right')} view={view} />
           </div>
 
-          <div className="col-span-3 sm:col-span-1 sm:col-start-2 row-start-2 justify-self-center relative w-56 h-60 sm:w-72 sm:h-68 md:h-72 rounded-2xl bg-slate-800/60 border border-slate-700/70">
+          <div className="col-span-3 sm:col-span-1 sm:col-start-2 row-start-2 justify-self-center relative w-56 h-60 sm:w-72 sm:h-68 md:h-72 rounded-xl bg-stone-800/60 border border-stone-700/70">
             {tablePlays.map((play) => (
               <div
                 key={cardKey(play.card)}
@@ -120,8 +120,8 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
 
         {/* Your cards */}
         <section
-          className={`rounded-2xl border px-3 sm:px-5 pt-3 pb-4 flex flex-col gap-1 bg-slate-900 ${
-            statusActive ? 'border-blue-400 ring-2 ring-blue-400/60' : 'border-slate-900'
+          className={`rounded-xl border px-3 sm:px-5 pt-3 pb-4 flex flex-col gap-1 bg-stone-900 ${
+            statusActive ? 'border-felt-400 ring-2 ring-felt-400/60' : 'border-stone-900'
           }`}
         >
           <div className="flex flex-wrap items-center justify-between gap-2 min-h-9">
@@ -131,7 +131,7 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
                 type="button"
                 onClick={handlePass}
                 disabled={selected.length !== 3}
-                className="h-9 px-4 rounded-lg bg-blue-600 text-white text-xs font-bold uppercase tracking-wider hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="h-9 px-4 rounded-lg bg-felt-600 text-white text-sm font-medium hover:bg-felt-500 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 Pass {selected.length}/3 {DIRECTION_LABEL[view.passDirection]}
               </button>
@@ -154,23 +154,23 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
                 />
               );
             })}
-            {view.myHand.length === 0 && <span className="text-sm text-slate-400 py-8">No cards.</span>}
+            {view.myHand.length === 0 && <span className="text-sm text-stone-400 py-8">No cards.</span>}
           </div>
         </section>
       </div>
 
       {/* Sidebar: where the hand stands, then the scores */}
       <aside className="flex flex-col gap-4 lg:sticky lg:top-28">
-        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-3">
+        <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-3">
           <div className="flex items-center justify-between gap-2 text-sm">
-            <span className="font-bold font-space text-slate-950">Hand {view.hand + 1}</span>
-            <span className="text-slate-600">
+            <span className="font-semibold font-display text-stone-900">Hand {view.hand + 1}</span>
+            <span className="text-stone-600">
               {passing ? `Passing ${DIRECTION_LABEL[view.passDirection]}` : `Trick ${Math.min(view.tricksPlayed + 1, 13)} / 13`}
             </span>
           </div>
           <div className="flex flex-wrap gap-1.5">
             {view.passDirection === 'HOLD' && view.phase === 'PLAYING' && (
-              <span className="text-xs text-slate-600 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+              <span className="text-xs text-stone-600 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-full">
                 Hold hand — no passing
               </span>
             )}
@@ -182,7 +182,7 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
           </div>
           <p
             className={`text-sm font-semibold rounded-lg px-3 py-2 ${
-              statusActive ? 'bg-blue-50 text-blue-700' : 'bg-slate-50 text-slate-600'
+              statusActive ? 'bg-felt-50 text-felt-700' : 'bg-stone-50 text-stone-600'
             }`}
           >
             {status()}
@@ -190,29 +190,30 @@ export const HeartsBoard: React.FC<HeartsBoardProps> = ({ view, playerId, intent
         </section>
 
         {view.phase === 'GAME_OVER' && (
-          <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 font-bold font-space text-slate-950">
-            🏆 {nickOf(view.winner)} wins with {view.seats.find((s) => s.id === view.winner)?.score} points
+          <section role="status" className="rounded-xl border border-felt-200 bg-felt-50 p-4 font-semibold font-display text-felt-900 flex items-center gap-2">
+            <span aria-hidden className="material-symbols-outlined text-[20px] text-felt-600">trophy</span>
+            {nickOf(view.winner)} wins with {view.seats.find((s) => s.id === view.winner)?.score} points
           </section>
         )}
 
-        <section className="border border-slate-200 bg-white rounded-2xl p-4 flex flex-col gap-2">
-          <h3 className="font-bold font-space text-slate-950">Scores</h3>
+        <section className="border border-stone-200 bg-white rounded-xl p-4 flex flex-col gap-2">
+          <h3 className="font-semibold font-display text-stone-900">Scores</h3>
           {/* One row per player, so four names never overflow the sidebar however many hands are played. */}
-          <ul className="flex flex-col divide-y divide-slate-100">
+          <ul className="flex flex-col divide-y divide-stone-100">
             {view.seats.map((s, j) => (
               <li key={s.id} className="py-2 flex items-center justify-between gap-3">
                 <div className="flex flex-col min-w-0">
-                  <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-blue-700' : 'text-slate-900'}`}>
+                  <span className={`text-sm font-semibold truncate ${s.id === playerId ? 'text-felt-700' : 'text-stone-900'}`}>
                     {s.nick}
-                    {s.id === playerId && <span className="text-xs font-normal text-slate-500"> (you)</span>}
+                    {s.id === playerId && <span className="text-xs font-normal text-stone-500"> (you)</span>}
                   </span>
                   {view.history.length > 0 && (
-                    <span className="text-xs text-slate-500 font-mono-code truncate">
+                    <span className="text-xs text-stone-500 font-mono-code truncate">
                       {view.history.map((row) => row[j]).join(' · ')}
                     </span>
                   )}
                 </div>
-                <span className="text-lg font-bold font-mono-code text-slate-950">{s.score}</span>
+                <span className="text-lg font-bold font-mono-code text-stone-950">{s.score}</span>
               </li>
             ))}
           </ul>
@@ -239,15 +240,15 @@ const SeatBadge: React.FC<{ seat: HeartsSeat | undefined; view: HeartsView; you?
   return (
     <div
       className={`rounded-xl px-2.5 sm:px-3 py-2 text-white border min-w-0 ${
-        onClock ? 'border-blue-400 bg-blue-600/30 ring-2 ring-blue-400' : 'border-slate-700 bg-slate-800'
+        onClock ? 'border-felt-400 bg-felt-600/30 ring-2 ring-felt-400' : 'border-stone-700 bg-stone-800'
       }`}
     >
       <div className="flex items-center gap-2 text-sm font-semibold truncate">
         {seat.nick}
-        {you && <span className="text-xs font-normal text-slate-300">(you)</span>}
+        {you && <span className="text-xs font-normal text-stone-300">(you)</span>}
         {view.phase === 'PASSING' && seat.passed && <span className="text-xs text-emerald-300">✓ passed</span>}
       </div>
-      <div className="text-[11px] sm:text-xs text-slate-300">
+      <div className="text-[11px] sm:text-xs text-stone-300">
         {seat.cardCount} cards · ♥ {seat.handPoints} · {seat.score} pts
       </div>
     </div>

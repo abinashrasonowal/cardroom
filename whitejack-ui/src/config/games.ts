@@ -10,7 +10,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     playerCountLabel: '2–8 Players',
     playersCount: 2,
     suitGlyph: '♠',
-    suitColor: 'text-slate-900',
+    suitColor: 'text-stone-900',
     accent: 'blue',
     description:
       'No-limit Texas Hold’em. Two hole cards, five on the board — bet, bluff and shove until one player holds every chip.',
@@ -70,10 +70,10 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     name: 'Spades',
     shortName: 'Spades (4P - 2v2)',
     badge: '2v2 Teams',
-    playerCountLabel: '4P',
+    playerCountLabel: '4 Players',
     playersCount: 4,
     suitGlyph: '♠',
-    suitColor: 'text-slate-950',
+    suitColor: 'text-stone-950',
     accent: 'emerald',
     description:
       'Partnership trick-taking where spades always trump. Bid exactly, cover your partner and dodge the bag penalty.',
@@ -93,7 +93,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     name: 'Euchre',
     shortName: 'Euchre (4P - 2v2)',
     badge: '24-Card Deck',
-    playerCountLabel: '4P',
+    playerCountLabel: '4 Players',
     playersCount: 4,
     suitGlyph: '♦',
     suitColor: 'text-red-600',
@@ -118,7 +118,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     playerCountLabel: '3-6P',
     playersCount: 4,
     suitGlyph: '♣',
-    suitColor: 'text-slate-950',
+    suitColor: 'text-stone-950',
     accent: 'orange',
     description:
       'Exact-contract bidding over hands that grow and shrink. Miss your bid by even one trick and the round scores nothing.',
@@ -140,7 +140,7 @@ export const GAME_DEFINITIONS: Record<GameKey, GameDefinition> = {
     playerCountLabel: '2-8P',
     playersCount: 4,
     suitGlyph: '🂠',
-    suitColor: 'text-slate-950',
+    suitColor: 'text-stone-950',
     accent: 'slate',
     description:
       'A freeform table for house games — deck size, jokers, chips and manual dealing are all yours to configure.',
