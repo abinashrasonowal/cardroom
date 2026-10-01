@@ -2,6 +2,7 @@ package com.whitejack.server;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -183,7 +184,9 @@ class GatewayIntegrationTest {
             JsonNode playing = players.get(0).await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
             String onClock = playing.at("/view/onClock").asText();
             Client leader = players.stream().filter(p -> p.playerId.equals(onClock)).findFirst().orElseThrow();
-            JsonNode leaderView = leader.await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
+            // players.get(0) already consumed its PLAYING view just above; waiting again would hang.
+            JsonNode leaderView = leader == players.get(0) ? playing
+                    : leader.await(f -> isGame(f) && "PLAYING".equals(f.at("/view/phase").asText()));
             assertEquals("TWO", leaderView.at("/view/legal/0/rank").asText(), "the 2♣ holder leads, and only the 2♣");
 
             leader.send("intent", Map.of("type", "play", "card", leaderView.at("/view/legal/0")));
@@ -224,6 +227,40 @@ class GatewayIntegrationTest {
         bob.await(f -> "accepted".equals(f.path("type").asText()));
         JsonNode aliceTurn = alice.await(f -> isGame(f) && alice.playerId.equals(f.at("/view/onClock").asText()));
         assertEquals(discarding.path("discards").get(0), aliceTurn.at("/view/discardTop"));
+    }
+
+    @Test
+    void pokerDealsTwoPrivateCardsPostsBlindsAndPlaysACall() throws Exception {
+        String room = createRoom("poker");
+        alice = connect(cookies.mint());
+        bob = connect(cookies.mint());
+        alice.send("join", Map.of("room", room, "nick", "alice", "clientSeed", SEED));
+        alice.await(f -> isLobbyWith(f, 1));
+        bob.send("join", Map.of("room", room, "nick", "bob", "clientSeed", SEED));
+        alice.await(f -> isLobbyWith(f, 2));
+        alice.send("start", Map.of());
+
+        JsonNode aliceFrame = alice.await(f -> isGame(f));
+        JsonNode aliceView = aliceFrame.path("view");
+        JsonNode bobView = bob.await(f -> isGame(f)).path("view");
+        assertEquals("poker", aliceFrame.path("game").asText());
+        assertEquals(2, aliceView.path("myCards").size());
+        assertEquals(2, bobView.path("myCards").size());
+        assertNotEquals(aliceView.path("myCards"), bobView.path("myCards"));
+        assertEquals(0, aliceView.path("board").size());
+        assertEquals(30, aliceView.path("pot").asInt(), "both blinds are in");
+        assertEquals(alice.playerId, aliceView.path("onClock").asText(), "heads-up the button acts first");
+        assertEquals(3, aliceView.path("legal").size());
+        assertEquals(0, bobView.path("legal").size());
+        assertFalse(bobView.toString().contains(aliceView.path("myCards").get(0).toString())
+                && bobView.toString().contains(aliceView.path("myCards").get(1).toString()),
+                "bob's view must not carry alice's hole cards");
+
+        alice.send("intent", Map.of("type", "call"));
+        alice.await(f -> "accepted".equals(f.path("type").asText()));
+        JsonNode bobTurn = bob.await(f -> isGame(f) && bob.playerId.equals(f.at("/view/onClock").asText())).path("view");
+        assertEquals(40, bobTurn.path("pot").asInt());
+        assertTrue(bobTurn.path("legal").toString().contains("check"), "the big blind can check");
     }
 
     @Test

@@ -1,120 +1,119 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. One warm gray family (Tailwind's stone) carries the interface; `felt` is the only
+ * accent — the green of a card table — used for focus, selection and "your turn". Red stays reserved
+ * for hearts and diamonds and for errors.
+ */
+@theme {
+  --font-sans: 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --color-felt-50: #f1f7f4;
+  --color-felt-100: #dfeee6;
+  --color-felt-200: #bfdccd;
+  --color-felt-300: #93c2a9;
+  --color-felt-400: #61a17f;
+  --color-felt-500: #3f8461;
+  --color-felt-600: #2d6a4c;
+  --color-felt-700: #25553e;
+  --color-felt-800: #1f4433;
+  --color-felt-900: #1a382b;
+  --color-felt-950: #0d1f17;
+
+  --shadow-hairline: 0 1px 0 rgb(28 25 23 / 0.04);
+  --shadow-raised: 0 1px 2px rgb(28 25 23 / 0.04), 0 4px 12px -2px rgb(28 25 23 / 0.06);
+  --shadow-overlay: 0 1px 2px rgb(28 25 23 / 0.06), 0 16px 40px -8px rgb(28 25 23 / 0.18);
+
+  --animate-scale-up: scale-up 160ms cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-rise: rise 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes scale-up {
+  from { opacity: 0; transform: scale(0.97); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 @layer base {
-  html, body {
-    margin: 0;
-    padding: 0;
+  html {
     font-size: 14px;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
   }
   body {
+    margin: 0;
+    font-family: var(--font-sans);
+    background-color: #fafaf9;
+    color: var(--color-stone-900);
     overscroll-behavior: none;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  ::selection {
+    background-color: var(--color-felt-200);
+    color: var(--color-felt-950);
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  button, a, input, select, [role='button'] {
+    touch-action: manipulation;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-felt-500);
+    outline-offset: 2px;
+  }
+  input:focus-visible {
+    outline: none;
+  }
+  .material-symbols-outlined {
+    font-variation-settings: 'opsz' 20, 'wght' 400, 'FILL' 0, 'GRAD' 0;
+    user-select: none;
   }
 }
 
-.font-outfit {
-  font-family: 'Outfit', 'Space Grotesk', sans-serif;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
-.font-space {
-  font-family: 'Space Grotesk', sans-serif;
+/* Headings and short display text: Geist with tight tracking. */
+.font-display {
+  font-family: var(--font-sans);
+  letter-spacing: -0.025em;
 }
 
 .font-mono-code {
-  font-family: 'JetBrains Mono', monospace;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Card perspective & elevation */
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 6px -2px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 1px 2px rgb(28 25 23 / 0.08), 0 3px 6px -2px rgb(28 25 23 / 0.06);
 }
 
 .card-shadow-elevated {
-  box-shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.12), 0 4px 6px -4px rgba(15, 23, 42, 0.08);
-}
-
-/* Lobby page surface */
-.page-surface {
-  background-color: #f5f6fb;
-  background-image: radial-gradient(60rem 30rem at 50% -10rem, rgba(124, 58, 237, 0.06), transparent);
+  box-shadow: 0 8px 16px -4px rgb(28 25 23 / 0.16), 0 3px 6px -3px rgb(28 25 23 / 0.1);
 }
 
 .table-felt-pattern {
-  background-color: #0d2b1f;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
-  background-size: 24px 24px;
-}
-
-@theme {
-  --color-on-tertiary-container: #ffede6;
-  --color-on-tertiary: #ffffff;
-  --color-tertiary-container: #bc4800;
-  --color-on-surface-variant: #434655;
-  --color-inverse-surface: #283044;
-  --color-on-tertiary-fixed: #360f00;
-  --color-tertiary-fixed: #ffdbcd;
-  --color-on-secondary-fixed-variant: #93000b;
-  --color-secondary-fixed: #ffdad6;
-  --color-primary-fixed-dim: #b4c5ff;
-  --color-on-primary: #ffffff;
-  --color-surface-container-low: #f2f3ff;
-  --color-error-container: #ffdad6;
-  --color-surface-dim: #d2d9f4;
-  --color-on-error-container: #93000a;
-  --color-primary: #004ac6;
-  --color-surface-container-highest: #dae2fd;
-  --color-outline: #737686;
-  --color-primary-fixed: #dbe1ff;
-  --color-on-secondary-container: #fffbff;
-  --color-secondary-fixed-dim: #ffb4ab;
-  --color-on-secondary-fixed: #410002;
-  --color-surface-container-lowest: #ffffff;
-  --color-surface-container: #eaedff;
-  --color-on-primary-fixed-variant: #003ea8;
-  --color-secondary: #bb0112;
-  --color-on-primary-fixed: #00174b;
-  --color-error: #ba1a1a;
-  --color-on-error: #ffffff;
-  --color-on-surface: #131b2e;
-  --color-on-tertiary-fixed-variant: #7d2d00;
-  --color-secondary-container: #e02928;
-  --color-surface: #faf8ff;
-  --color-background: #faf8ff;
-  --color-on-background: #131b2e;
-  --color-tertiary-fixed-dim: #ffb596;
-  --color-outline-variant: #c3c6d7;
-  --color-surface-bright: #faf8ff;
-  --color-on-primary-container: #eeefff;
-  --color-primary-container: #2563eb;
-  --color-inverse-primary: #b4c5ff;
-  --color-surface-container-high: #e2e7ff;
-  --color-surface-tint: #0053db;
-  --color-surface-variant: #dae2fd;
-  --color-on-secondary: #ffffff;
-  --color-tertiary: #943700;
-  --color-inverse-on-surface: #eef0ff;
-
-  --spacing-margin-mobile: 1rem;
-  --spacing-gutter: 1rem;
-  --spacing-space-xs: 0.25rem;
-  --spacing-space-xl: 2.5rem;
-  --spacing-space-lg: 1.5rem;
-  --spacing-space-md: 1rem;
-  --spacing-gutter-mobile: 0.5rem;
-  --spacing-space-sm: 0.5rem;
-  --spacing-margin: 2rem;
-
-  --font-headline-lg-mobile: Space Grotesk;
-  --font-display-lg: Space Grotesk;
-  --font-label-lg: Geist;
-  --font-label-sm: Geist;
-  --font-body-sm: Geist;
-  --font-body-lg: Geist;
-  --font-headline-md: Space Grotesk;
-  --font-headline-sm: Space Grotesk;
-  --font-body-md: Geist;
-  --font-headline-lg: Space Grotesk;
-  --font-label-md: Geist;
-  --font-title-md: Geist;
-  --font-display-lg-mobile: Space Grotesk;
+  background-color: #0f2a1f;
+  background-image: radial-gradient(rgb(255 255 255 / 0.035) 1px, transparent 0);
+  background-size: 22px 22px;
 }

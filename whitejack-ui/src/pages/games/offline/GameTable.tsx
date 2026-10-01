@@ -322,11 +322,11 @@ export const GameTable: React.FC<GameTableProps> = ({
     if (!brokenSuit) {
       if (gameKey === 'hearts' && card.suit === 'hearts') {
         setBrokenSuit(true);
-        addLog(`Hearts have been broken!`, 'system');
+        addLog(`Hearts are broken.`, 'system');
       }
       if (gameKey === 'spades' && card.suit === 'spades') {
         setBrokenSuit(true);
-        addLog(`Spades have been broken!`, 'system');
+        addLog(`Spades are broken.`, 'system');
       }
     }
 
@@ -463,7 +463,7 @@ export const GameTable: React.FC<GameTableProps> = ({
       if (gameKey === 'hearts') {
         const moonShooter = prev.find((p) => p.roundScore >= 26);
         if (moonShooter) {
-          addLog(`🌙 ${moonShooter.name} SHOT THE MOON! (+26 to all opponents!)`, 'score');
+          addLog(`${moonShooter.name} shot the moon — +26 to every opponent.`, 'score');
           return prev.map((p) => {
             const added = p.id === moonShooter.id ? 0 : 26;
             return {
@@ -566,12 +566,12 @@ export const GameTable: React.FC<GameTableProps> = ({
       case 'emerald':
         return 'bg-emerald-950 border-emerald-900 shadow-inner';
       case 'navy':
-        return 'bg-slate-950 border-slate-800 shadow-inner';
+        return 'bg-stone-950 border-stone-800 shadow-inner';
       case 'studio':
-        return 'bg-slate-100 border-slate-200 shadow-inner';
+        return 'bg-stone-100 border-stone-200 shadow-inner';
       case 'slate':
       default:
-        return 'bg-slate-900 border-slate-800 shadow-inner';
+        return 'bg-stone-900 border-stone-800 shadow-inner';
     }
   }, [settings.tableTheme]);
 
@@ -595,15 +595,15 @@ export const GameTable: React.FC<GameTableProps> = ({
   return (
     <div className="w-full max-w-[1560px] mx-auto px-2 sm:px-6 flex flex-col gap-4">
       {/* Top Table Control Bar */}
-      <div className="bg-white border border-slate-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
+      <div className="bg-white border border-stone-200 rounded-xl px-4 py-3 flex flex-wrap items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Room:</span>
-            <span className="font-mono-code font-bold text-sm bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">Room:</span>
+            <span className="font-mono-code font-bold text-sm bg-felt-50 text-felt-700 border border-felt-200 px-2 py-0.5 rounded flex items-center gap-1.5">
               <span>{roomCode}</span>
               <button
                 onClick={handleCopyInviteLink}
-                className="hover:text-blue-900 text-xs cursor-pointer"
+                className="hover:text-felt-900 text-xs cursor-pointer"
                 title="Copy Room Link"
               >
                 {copiedLink ? '✓' : '⧉'}
@@ -611,11 +611,11 @@ export const GameTable: React.FC<GameTableProps> = ({
             </span>
           </div>
 
-          <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+          <div className="h-4 w-px bg-stone-200 hidden sm:block"></div>
 
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-slate-950 font-space">{gameDef.name}</span>
-            <span className="text-[10px] text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full font-semibold">
+            <span className="text-xs font-bold text-stone-950 font-display">{gameDef.name}</span>
+            <span className="text-[10px] text-felt-700 bg-felt-100 px-2 py-0.5 rounded-full font-semibold">
               Round {roundNumber}
             </span>
           </div>
@@ -624,12 +624,12 @@ export const GameTable: React.FC<GameTableProps> = ({
         {/* Center / Right controls */}
         <div className="flex items-center gap-2">
           {/* Reaction Tray */}
-          <div className="hidden sm:flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-1">
+          <div className="hidden sm:flex items-center gap-1 bg-stone-50 border border-stone-200 rounded-lg p-1">
             {['👏', '🔥', '🃏', '🎯', '😅'].map((emoji) => (
               <button
                 key={emoji}
                 onClick={() => handleSendReaction(emoji)}
-                className="w-7 h-7 flex items-center justify-center rounded hover:bg-white hover:shadow-xs transition-all text-sm cursor-pointer"
+                className="w-7 h-7 flex items-center justify-center rounded hover:bg-white hover:shadow-xs transition-[transform,background-color,border-color,box-shadow,opacity] text-sm cursor-pointer"
                 title={`Send ${emoji}`}
               >
                 {emoji}
@@ -642,8 +642,8 @@ export const GameTable: React.FC<GameTableProps> = ({
             onClick={() => setIsLogOpen(!isLogOpen)}
             className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-colors flex items-center gap-1.5 cursor-pointer ${
               isLogOpen
-                ? 'bg-blue-50 text-blue-700 border-blue-200'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                ? 'bg-felt-50 text-felt-700 border-felt-200'
+                : 'bg-stone-50 text-stone-700 border-stone-200 hover:bg-stone-100'
             }`}
           >
             <span className="material-symbols-outlined text-base">format_list_bulleted</span>
@@ -652,7 +652,7 @@ export const GameTable: React.FC<GameTableProps> = ({
 
           <button
             onClick={onOpenSettings}
-            className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-700 hover:bg-slate-100 cursor-pointer"
+            className="p-1.5 rounded-lg bg-stone-50 border border-stone-200 text-stone-700 hover:bg-stone-100 cursor-pointer"
             title="Table Felt & Card Preferences"
           >
             <span className="material-symbols-outlined text-base">palette</span>
@@ -660,7 +660,7 @@ export const GameTable: React.FC<GameTableProps> = ({
 
           <button
             onClick={onLeaveTable}
-            className="text-xs font-semibold text-slate-600 hover:text-red-600 px-2.5 py-1.5 rounded-lg border border-slate-200 hover:border-red-200 hover:bg-red-50 transition-colors flex items-center gap-1 cursor-pointer"
+            className="text-xs font-semibold text-stone-600 hover:text-red-600 px-2.5 py-1.5 rounded-lg border border-stone-200 hover:border-red-200 hover:bg-red-50 transition-colors flex items-center gap-1 cursor-pointer"
           >
             <span className="material-symbols-outlined text-base">logout</span>
             <span className="hidden sm:inline">Leave Table</span>
@@ -670,15 +670,15 @@ export const GameTable: React.FC<GameTableProps> = ({
 
       {/* Floating Reaction Notification */}
       {reactionFloat && (
-        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-bounce bg-white border border-slate-200 shadow-xl rounded-full px-4 py-1.5 flex items-center gap-2">
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 animate-rise bg-white border border-stone-200 shadow-raised rounded-full px-4 py-1.5 flex items-center gap-2">
           <span className="text-xl">{reactionFloat.text}</span>
-          <span className="text-xs font-bold text-slate-700">{reactionFloat.from}</span>
+          <span className="text-xs font-bold text-stone-700">{reactionFloat.from}</span>
         </div>
       )}
 
       {/* MAIN TABLE FELT CANVAS */}
       <div
-        className={`w-full rounded-2xl border-4 p-4 sm:p-6 transition-colors duration-200 relative overflow-hidden flex flex-col justify-between min-h-[620px] lg:min-h-[700px] ${tableBackground}`}
+        className={`w-full rounded-xl border-4 p-4 sm:p-6 transition-colors duration-200 relative overflow-hidden flex flex-col justify-between min-h-[620px] lg:min-h-[700px] ${tableBackground}`}
       >
         {/* Subtle subtle felt watermark */}
         <div className="absolute inset-0 pointer-events-none opacity-5 flex items-center justify-center">
@@ -690,13 +690,13 @@ export const GameTable: React.FC<GameTableProps> = ({
         {/* TOP SEAT: North (Sarah) */}
         <div className="flex flex-col items-center gap-1 relative z-10">
           <div
-            className={`flex items-center gap-3 px-3 py-1.5 rounded-full border transition-all ${
+            className={`flex items-center gap-3 px-3 py-1.5 rounded-full border transition-[transform,background-color,border-color,box-shadow,opacity] ${
               activePlayerIndex === 2
-                ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30'
-                : 'bg-slate-900/80 backdrop-blur-md text-white border-slate-700'
+                ? 'bg-felt-600 text-white border-felt-400 ring-4 ring-felt-500/30'
+                : 'bg-stone-900/80 backdrop-blur-md text-white border-stone-700'
             }`}
           >
-            <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold">
+            <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center text-xs font-bold">
               {players[2].avatar}
             </div>
             <span className="text-xs font-bold">{players[2].name}</span>
@@ -734,13 +734,13 @@ export const GameTable: React.FC<GameTableProps> = ({
           {/* West Player (Marcus) */}
           <div className="col-span-3 sm:col-span-3 flex flex-col items-start gap-1">
             <div
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all max-w-full ${
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-[transform,background-color,border-color,box-shadow,opacity] max-w-full ${
                 activePlayerIndex === 1
-                  ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30'
-                  : 'bg-slate-900/80 backdrop-blur-md text-white border-slate-700'
+                  ? 'bg-felt-600 text-white border-felt-400 ring-4 ring-felt-500/30'
+                  : 'bg-stone-900/80 backdrop-blur-md text-white border-stone-700'
               }`}
             >
-              <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold shrink-0">
+              <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center text-xs font-bold shrink-0">
                 {players[1].avatar}
               </div>
               <div className="flex flex-col truncate">
@@ -799,13 +799,13 @@ export const GameTable: React.FC<GameTableProps> = ({
                 return (
                   <div
                     key={played.card.id}
-                    className={`absolute transition-all duration-200 transform ${posClass} z-20`}
+                    className={`absolute transition-[transform,background-color,border-color,box-shadow,opacity] duration-200 transform ${posClass} z-20`}
                   >
                     <CardView
                       card={played.card}
                       size="md"
                       fourColor={settings.fourColorDeck}
-                      className="shadow-xl"
+                      className="shadow-raised"
                     />
                     <span className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[9px] text-white/90 bg-black/60 px-1 rounded whitespace-nowrap">
                       {played.playerName}
@@ -817,9 +817,9 @@ export const GameTable: React.FC<GameTableProps> = ({
               {/* Trick Winner Notification Badge */}
               {trickWinnerNotification && (
                 <div className="absolute inset-0 flex items-center justify-center z-30 animate-scale-up">
-                  <div className="bg-slate-900/90 border border-blue-500/50 shadow-2xl rounded-xl px-4 py-2 text-center text-white backdrop-blur-md">
-                    <span className="text-xs font-bold text-blue-400 block">Trick Won!</span>
-                    <span className="text-sm font-space font-bold">{trickWinnerNotification.winnerName}</span>
+                  <div className="bg-stone-900/90 border border-felt-500/50 shadow-raised rounded-xl px-4 py-2 text-center text-white backdrop-blur-md">
+                    <span className="text-xs font-bold text-felt-400 block">Trick won</span>
+                    <span className="text-sm font-display font-bold">{trickWinnerNotification.winnerName}</span>
                     {gameKey === 'hearts' && trickWinnerNotification.points > 0 && (
                       <span className="text-xs text-red-400 block mt-0.5">
                         +{trickWinnerNotification.points} Penalty Pts
@@ -836,10 +836,10 @@ export const GameTable: React.FC<GameTableProps> = ({
                 <button
                   onClick={handlePassCardsConfirm}
                   disabled={selectedPassCards.length !== 3}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 shadow-md ${
+                  className={`px-4 py-2 rounded-xl text-sm font-medium transition-[transform,background-color,border-color,box-shadow,opacity] flex items-center gap-1.5 shadow-raised ${
                     selectedPassCards.length === 3
-                      ? 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer scale-105'
-                      : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                      ? 'bg-felt-600 text-white hover:bg-felt-700 cursor-pointer scale-105'
+                      : 'bg-stone-700 text-stone-400 cursor-not-allowed'
                   }`}
                 >
                   <span className="material-symbols-outlined text-base">swap_horiz</span>
@@ -850,17 +850,17 @@ export const GameTable: React.FC<GameTableProps> = ({
 
             {/* Bidding Phase Selector (Spades / Oh Hell) */}
             {phase === 'bidding' && (
-              <div className="mt-3 bg-slate-900/90 border border-white/20 rounded-xl p-3 flex flex-col items-center gap-2 z-30 text-white backdrop-blur-md">
+              <div className="mt-3 bg-stone-900/90 border border-white/20 rounded-xl p-3 flex flex-col items-center gap-2 z-30 text-white backdrop-blur-md">
                 <span className="text-xs font-bold">Select Your Contract Bid:</span>
                 <div className="flex items-center gap-1 flex-wrap justify-center">
                   {[0, 1, 2, 3, 4, 5, 6, 7].map((b) => (
                     <button
                       key={b}
                       onClick={() => setUserBidSelection(b)}
-                      className={`w-8 h-8 rounded-lg font-mono-code font-bold text-xs transition-all cursor-pointer ${
+                      className={`w-8 h-8 rounded-lg font-mono-code font-bold text-xs transition-[transform,background-color,border-color,box-shadow,opacity] cursor-pointer ${
                         userBidSelection === b
-                          ? 'bg-blue-600 text-white scale-110 shadow-md'
-                          : 'bg-white/10 hover:bg-white/20 text-slate-200'
+                          ? 'bg-felt-600 text-white scale-110 shadow-raised'
+                          : 'bg-white/10 hover:bg-white/20 text-stone-200'
                       }`}
                     >
                       {b === 0 ? 'Nil' : b}
@@ -869,7 +869,7 @@ export const GameTable: React.FC<GameTableProps> = ({
                 </div>
                 <button
                   onClick={handleSubmitBid}
-                  className="mt-1 px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs font-bold uppercase tracking-wider text-white cursor-pointer shadow-sm"
+                  className="mt-1 px-4 py-1.5 rounded-lg bg-felt-600 hover:bg-felt-700 text-sm font-medium text-white cursor-pointer shadow-sm"
                 >
                   Confirm Bid ({userBidSelection === 0 ? 'Nil' : `${userBidSelection} Tricks`})
                 </button>
@@ -880,10 +880,10 @@ export const GameTable: React.FC<GameTableProps> = ({
           {/* East Player (Elena) */}
           <div className="col-span-3 sm:col-span-3 flex flex-col items-end gap-1">
             <div
-              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-all max-w-full ${
+              className={`flex items-center gap-2 px-2.5 py-1.5 rounded-xl border transition-[transform,background-color,border-color,box-shadow,opacity] max-w-full ${
                 activePlayerIndex === 3
-                  ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30'
-                  : 'bg-slate-900/80 backdrop-blur-md text-white border-slate-700'
+                  ? 'bg-felt-600 text-white border-felt-400 ring-4 ring-felt-500/30'
+                  : 'bg-stone-900/80 backdrop-blur-md text-white border-stone-700'
               }`}
             >
               <div className="flex flex-col text-right truncate">
@@ -892,7 +892,7 @@ export const GameTable: React.FC<GameTableProps> = ({
                   {players[3].cards.length} cards · {gameKey === 'hearts' ? `${players[3].roundScore} pts` : `Won: ${players[3].tricksWon}`}
                 </span>
               </div>
-              <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center text-xs font-bold shrink-0">
+              <div className="w-6 h-6 rounded-full bg-stone-700 flex items-center justify-center text-xs font-bold shrink-0">
                 {players[3].avatar}
               </div>
             </div>
@@ -916,13 +916,13 @@ export const GameTable: React.FC<GameTableProps> = ({
         <div className="flex flex-col items-center gap-2 relative z-10 pt-2">
           {/* User Status Bar */}
           <div
-            className={`flex items-center gap-4 px-4 py-1.5 rounded-full border transition-all ${
+            className={`flex items-center gap-4 px-4 py-1.5 rounded-full border transition-[transform,background-color,border-color,box-shadow,opacity] ${
               activePlayerIndex === 0
-                ? 'bg-blue-600 text-white border-blue-400 ring-4 ring-blue-500/30 shadow-lg'
-                : 'bg-slate-900/85 backdrop-blur-md text-white border-slate-700'
+                ? 'bg-felt-600 text-white border-felt-400 ring-4 ring-felt-500/30 shadow-raised'
+                : 'bg-stone-900/85 backdrop-blur-md text-white border-stone-700'
             }`}
           >
-            <div className="w-6 h-6 rounded-full bg-blue-700 border border-white/30 flex items-center justify-center text-xs font-bold">
+            <div className="w-6 h-6 rounded-full bg-felt-700 border border-white/30 flex items-center justify-center text-xs font-bold">
               {players[0].avatar}
             </div>
             <div className="flex items-center gap-2">
@@ -941,7 +941,7 @@ export const GameTable: React.FC<GameTableProps> = ({
               </span>
             )}
             {players[0].currentBid !== undefined && (
-              <span className="text-xs text-blue-200">
+              <span className="text-xs text-felt-200">
                 Bid: <strong className="font-mono-code">{players[0].currentBid}</strong>
               </span>
             )}
@@ -949,7 +949,7 @@ export const GameTable: React.FC<GameTableProps> = ({
 
           {/* USER CARD HAND */}
           <div className="w-full flex items-center justify-center overflow-x-auto pb-2 pt-3 px-2">
-            <div className="flex -space-x-6 sm:-space-x-7 md:-space-x-8 hover:space-x-1 sm:hover:space-x-1 transition-all duration-200">
+            <div className="flex -space-x-6 sm:-space-x-7 md:-space-x-8 hover:space-x-1 sm:hover:space-x-1 transition-[transform,background-color,border-color,box-shadow,opacity] duration-200">
               {players[0].cards.map((card) => {
                 const isSelected = selectedPassCards.includes(card.id);
                 const check = phase === 'playing' ? isCardPlayableForUser(card) : { legal: true };
@@ -973,37 +973,37 @@ export const GameTable: React.FC<GameTableProps> = ({
 
         {/* CUSTOM DECK / SANDBOX CONTROLS OVERLAY */}
         {gameKey === 'custom' && (
-          <div className="absolute top-4 left-4 z-30 bg-slate-900/90 border border-slate-700 rounded-xl p-3 text-white backdrop-blur-md flex flex-col gap-2 max-w-xs shadow-xl">
+          <div className="absolute top-4 left-4 z-30 bg-stone-900/90 border border-stone-700 rounded-xl p-3 text-white backdrop-blur-md flex flex-col gap-2 max-w-xs shadow-raised">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-blue-400">
+              <span className="text-sm font-medium text-felt-400">
                 Sandbox Controls
               </span>
-              <span className="text-[10px] text-slate-400 font-mono-code">
+              <span className="text-[10px] text-stone-400 font-mono-code">
                 Deck: {sandboxDeck.length} cards
               </span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
                 onClick={() => handleSandboxDeal(5)}
-                className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-[11px] font-bold cursor-pointer"
+                className="px-2.5 py-1 rounded bg-felt-600 hover:bg-felt-700 text-[11px] font-bold cursor-pointer"
               >
                 Deal 5
               </button>
               <button
                 onClick={() => handleSandboxDeal(7)}
-                className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-[11px] font-bold cursor-pointer"
+                className="px-2.5 py-1 rounded bg-felt-600 hover:bg-felt-700 text-[11px] font-bold cursor-pointer"
               >
                 Deal 7
               </button>
               <button
                 onClick={handleSandboxReset}
-                className="px-2.5 py-1 rounded bg-slate-700 hover:bg-slate-600 text-[11px] font-bold cursor-pointer"
+                className="px-2.5 py-1 rounded bg-stone-700 hover:bg-stone-600 text-[11px] font-bold cursor-pointer"
               >
                 Reset Table
               </button>
             </div>
             {rules.rule2 && (
-              <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-xs">
+              <div className="pt-2 border-t border-stone-800 flex items-center justify-between text-xs">
                 <span>Your Chips: {sandboxChips.p0 || 0}</span>
                 <div className="flex gap-1">
                   <button
@@ -1027,39 +1027,39 @@ export const GameTable: React.FC<GameTableProps> = ({
 
       {/* GAME LOG DRAWER */}
       {isLogOpen && (
-        <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm flex flex-col gap-2">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-800 flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-sm text-blue-600">history</span>
+        <div className="bg-white border border-stone-200 rounded-xl p-4 shadow-sm flex flex-col gap-2">
+          <div className="flex items-center justify-between border-b border-stone-200 pb-2">
+            <span className="text-sm font-medium text-stone-800 flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-sm text-felt-600">history</span>
               Round Play Log
             </span>
             <button
               onClick={() => setIsLogOpen(false)}
-              className="text-xs text-slate-400 hover:text-slate-700 cursor-pointer"
+              className="text-xs text-stone-400 hover:text-stone-700 cursor-pointer"
             >
               ✕ Close
             </button>
           </div>
           <div className="max-h-48 overflow-y-auto flex flex-col gap-1.5 font-mono-code text-xs">
             {gameLogs.length === 0 ? (
-              <span className="text-slate-400 italic">No plays yet this round.</span>
+              <span className="text-stone-400 italic">No plays yet this round.</span>
             ) : (
               gameLogs.map((log) => (
-                <div key={log.id} className="flex items-center justify-between text-slate-700">
+                <div key={log.id} className="flex items-center justify-between text-stone-700">
                   <span
                     className={
                       log.type === 'trick'
-                        ? 'text-blue-600 font-bold'
+                        ? 'text-felt-600 font-bold'
                         : log.type === 'score'
                         ? 'text-red-600 font-bold'
                         : log.type === 'system'
                         ? 'text-emerald-700'
-                        : 'text-slate-700'
+                        : 'text-stone-700'
                     }
                   >
                     {log.text}
                   </span>
-                  <span className="text-[10px] text-slate-400 shrink-0 pl-2">{log.timestamp}</span>
+                  <span className="text-[10px] text-stone-400 shrink-0 pl-2">{log.timestamp}</span>
                 </div>
               ))
             )}
@@ -1070,23 +1070,23 @@ export const GameTable: React.FC<GameTableProps> = ({
       {/* ROUND SUMMARY MODAL */}
       {phase === 'round_end' && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 rounded-2xl max-w-lg w-full p-6 shadow-2xl flex flex-col gap-4 animate-scale-up">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+          <div className="bg-white border border-stone-200 rounded-xl max-w-lg w-full p-6 shadow-raised flex flex-col gap-4 animate-scale-up">
+            <div className="flex items-center justify-between border-b border-stone-200 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🏆</span>
-                <h3 className="text-lg font-bold text-slate-950 font-space">
+                <h3 className="text-lg font-bold text-stone-950 font-display">
                   Round {roundNumber} Summary
                 </h3>
               </div>
-              <span className="text-xs font-bold bg-blue-100 text-blue-700 px-2.5 py-0.5 rounded-full">
+              <span className="text-xs font-bold bg-felt-100 text-felt-700 px-2.5 py-0.5 rounded-full">
                 {gameDef.name}
               </span>
             </div>
 
             {/* Scoreboard Table */}
-            <div className="border border-slate-200 rounded-xl overflow-hidden">
+            <div className="border border-stone-200 rounded-xl overflow-hidden">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 text-slate-500 uppercase font-semibold border-b border-slate-200">
+                <thead className="bg-stone-50 text-stone-500 uppercase font-semibold border-b border-stone-200">
                   <tr>
                     <th className="py-2.5 px-3">Player</th>
                     <th className="py-2.5 px-3 text-center">Tricks</th>
@@ -1094,14 +1094,14 @@ export const GameTable: React.FC<GameTableProps> = ({
                     <th className="py-2.5 px-3 text-right font-bold">Total Score</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 font-mono-code">
+                <tbody className="divide-y divide-stone-100 font-mono-code">
                   {players.map((p) => (
-                    <tr key={p.id} className={p.isUser ? 'bg-blue-50/50 font-bold' : ''}>
-                      <td className="py-2.5 px-3 font-sans font-medium text-slate-900 flex items-center gap-2">
+                    <tr key={p.id} className={p.isUser ? 'bg-felt-50/50 font-bold' : ''}>
+                      <td className="py-2.5 px-3 font-sans font-medium text-stone-900 flex items-center gap-2">
                         <span>{p.avatar}</span>
                         <span>{p.name}</span>
                         {p.isUser && (
-                          <span className="text-[10px] bg-blue-600 text-white px-1.5 rounded">
+                          <span className="text-[10px] bg-felt-600 text-white px-1.5 rounded">
                             YOU
                           </span>
                         )}
@@ -1109,12 +1109,12 @@ export const GameTable: React.FC<GameTableProps> = ({
                       <td className="py-2.5 px-3 text-center">{p.tricksWon}</td>
                       <td
                         className={`py-2.5 px-3 text-right ${
-                          p.roundScore > 0 && gameKey === 'hearts' ? 'text-red-600' : 'text-slate-700'
+                          p.roundScore > 0 && gameKey === 'hearts' ? 'text-red-600' : 'text-stone-700'
                         }`}
                       >
                         {p.roundScore}
                       </td>
-                      <td className="py-2.5 px-3 text-right font-bold text-slate-950">
+                      <td className="py-2.5 px-3 text-right font-bold text-stone-950">
                         {p.totalScore}
                       </td>
                     </tr>
@@ -1127,13 +1127,13 @@ export const GameTable: React.FC<GameTableProps> = ({
             <div className="flex items-center gap-3 pt-2">
               <button
                 onClick={onLeaveTable}
-                className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold uppercase tracking-wider cursor-pointer"
+                className="flex-1 py-2.5 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-sm font-medium cursor-pointer"
               >
                 Back to Lobby
               </button>
               <button
                 onClick={handleNextRound}
-                className="flex-1 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold uppercase tracking-wider cursor-pointer shadow-md flex items-center justify-center gap-1.5"
+                className="flex-1 py-2.5 rounded-xl bg-felt-600 hover:bg-felt-700 text-white text-sm font-medium cursor-pointer shadow-raised flex items-center justify-center gap-1.5"
               >
                 <span className="material-symbols-outlined text-base">play_arrow</span>
                 <span>Next Deal / Round {roundNumber + 1}</span>

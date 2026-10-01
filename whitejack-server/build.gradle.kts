@@ -7,11 +7,13 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
     implementation(project(":engine-core"))
+    implementation(project(":whitejack-bots"))
 
     // Games reach the runtime classpath only; the compiler never sees one (§13).
     runtimeOnly(project(":games-high-card"))
     runtimeOnly(project(":games-hearts"))
     runtimeOnly(project(":games-gin-rummy"))
+    runtimeOnly(project(":games-poker"))
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

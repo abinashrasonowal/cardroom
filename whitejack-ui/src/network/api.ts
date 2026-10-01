@@ -52,3 +52,25 @@ export async function createRoom(gameId: string): Promise<string> {
   );
   return created.room;
 }
+
+export interface AddedBot {
+  playerId: string;
+  nick: string;
+}
+
+/** Seats a Jev bot in the room's lobby. It joins over the socket like anyone else. */
+export async function addBot(room: string): Promise<AddedBot> {
+  return asJson<AddedBot>(
+    await fetch(`/api/rooms/${encodeURIComponent(room)}/bots`, {
+      method: 'POST',
+      headers: identityHeaders(),
+    })
+  );
+}
+
+/** The server marks bot nicknames this way. Display only; nothing trusts it. */
+export const BOT_NICK_SUFFIX = ' (bot)';
+
+export function isBotNick(nick: string): boolean {
+  return nick.endsWith(BOT_NICK_SUFFIX);
+}

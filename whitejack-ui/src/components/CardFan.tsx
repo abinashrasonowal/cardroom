@@ -65,11 +65,11 @@ export const CardFan: React.FC<CardFanProps> = ({ suit, size = 'md', className =
           <div
             key={`${card.rank}-${card.suit}`}
             className={`absolute left-1/2 top-1/2 bg-white border flex flex-col justify-between ${s.card} ${
-              front ? 'border-slate-200 shadow-md' : 'border-slate-200/80 shadow-sm'
-            } ${isRed(card.suit) ? 'text-red-500' : 'text-slate-800'}`}
+              front ? 'border-stone-200 shadow-md' : 'border-stone-200/80 shadow-sm'
+            } ${isRed(card.suit) ? 'text-red-500' : 'text-stone-800'}`}
             style={{ transform: `translateX(${s.shift(i)}px) rotate(${s.angle(i)}deg)` }}
           >
-            <span className={`font-space font-bold leading-none ${s.corner}`}>
+            <span className={`font-display font-bold leading-none ${s.corner}`}>
               {card.rank}
               {SUIT_SYMBOLS[card.suit]}
             </span>
@@ -80,7 +80,7 @@ export const CardFan: React.FC<CardFanProps> = ({ suit, size = 'md', className =
                 {SUIT_SYMBOLS[card.suit]}
               </span>
             )}
-            <span className={`font-space font-bold leading-none self-end rotate-180 ${s.corner}`}>
+            <span className={`font-display font-bold leading-none self-end rotate-180 ${s.corner}`}>
               {card.rank}
               {SUIT_SYMBOLS[card.suit]}
             </span>

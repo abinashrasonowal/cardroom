@@ -14,4 +14,7 @@ services:
       WHITEJACK_COOKIESECRET: ${WHITEJACK_COOKIE_SECRET:-}
       # Cross-origin WebSocket handshakes to allow (same-origin always works).
       WHITEJACK_ALLOWEDORIGINS: ${WHITEJACK_ALLOWED_ORIGINS:-http://localhost:*}
+      # OpenRouter key for the Jev bots; left empty, bots still play, on heuristics alone.
+      WHITEJACK_BOTS_OPENROUTERAPIKEY: ${OPENROUTER_API_KEY:-}
+      WHITEJACK_BOTS_MODEL: ${WHITEJACK_BOTS_MODEL:-~typesafe/jev-latest}
     restart: unless-stopped
