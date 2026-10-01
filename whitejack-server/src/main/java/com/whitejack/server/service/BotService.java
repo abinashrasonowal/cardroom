@@ -48,6 +48,7 @@ public class BotService implements DisposableBean {
     private final RoomService rooms;
     private final PlayerIdentityService identities;
     private final Advisor advisor;
+    private final BotReasoningStore notes;
     private final boolean enabled;
     private final int maxPerRoom;
     private final Duration pace;
@@ -60,13 +61,14 @@ public class BotService implements DisposableBean {
     });
     private volatile int port;
 
-    public BotService(RoomService rooms, PlayerIdentityService identities, Advisor advisor,
+    public BotService(RoomService rooms, PlayerIdentityService identities, Advisor advisor, BotReasoningStore notes,
             @Value("${whitejack.bots.enabled:true}") boolean enabled,
             @Value("${whitejack.bots.max-per-room:7}") int maxPerRoom,
             @Value("${whitejack.bots.pace:700ms}") Duration pace) {
         this.rooms = rooms;
         this.identities = identities;
         this.advisor = advisor;
+        this.notes = notes;
         this.enabled = enabled;
         this.maxPerRoom = maxPerRoom;
         this.pace = pace;
@@ -95,7 +97,7 @@ public class BotService implements DisposableBean {
         PlayerId player = identities.verify(token).orElseThrow();
         String nick = "Jev " + (seated.size() + 1) + NICK_SUFFIX;
         Bot.Config config = new Bot.Config(URI.create("ws://127.0.0.1:" + port + "/ws"), token, player.value(),
-                code.value(), nick, advisor, pace, executor);
+                code.value(), nick, advisor, pace, executor, notes);
         Bot bot;
         try {
             bot = Bot.join(config).get(JOIN_WAIT.toMillis(), TimeUnit.MILLISECONDS);
@@ -115,6 +117,11 @@ public class BotService implements DisposableBean {
         return new AddBotResponse(player.value(), nick);
     }
 
+    /** What this room's bots decided in its finished hands, newest first. */
+    public List<BotReasoningStore.HandNotes> notes(RoomCode code) {
+        return notes.finished(code.value());
+    }
+
     public int count(RoomCode code) {
         return bots.getOrDefault(code, List.of()).size();
     }
@@ -124,7 +131,7 @@ public class BotService implements DisposableBean {
     public void sweep() {
         bots.forEach((code, seated) -> {
             if (rooms.find(code).filter(RoomActor::isOpen).isEmpty()) seated.forEach(Bot::close);
-            if (seated.isEmpty()) bots.remove(code, seated);
+            if (seated.isEmpty() && bots.remove(code, seated)) notes.forget(code.value());
         });
     }
 

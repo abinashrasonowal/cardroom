@@ -1,14 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { BotNotesPanel } from '@/components/BotNotesPanel';
 import { GAME_DEFINITIONS } from '@/config/games';
 import { ROOM_SLOT_ID } from '@/layout/Header';
-import { addBot, listGames } from '@/network/api';
+import { addBot, botNotes, isBotNick, listGames } from '@/network/api';
 import { useRoom } from '@/network/useRoom';
 import { GinRummyBoard } from '@/pages/games/gin-rummy/GinRummyBoard';
 import { HeartsBoard } from '@/pages/games/hearts/HeartsBoard';
 import { PokerBoard } from '@/pages/games/poker/PokerBoard';
 import { TableSettings } from '@/types/game';
-import { GinView, HeartsView, PokerView } from '@/types/wire';
+import { BotHandNotes, GinView, HeartsView, PokerView } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
 import { WaitingRoom } from './WaitingRoom';
 
@@ -39,6 +40,23 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
   const isHost = lobby?.host === playerId;
   const [maxPlayers, setMaxPlayers] = useState<number | null>(null);
   const [slot, setSlot] = useState<HTMLElement | null>(null);
+  const [notes, setNotes] = useState<BotHandNotes[]>([]);
+  const hasBots = !!lobby?.members.some((m) => isBotNick(m.nick));
+
+  // A hand's bot reasoning is released once the hand is over, so ask again whenever a new one
+  // starts or the game ends. Hands are numbered in every live game but High Card.
+  const handNumber = (game as { hand?: number } | null)?.hand ?? -1;
+  const gameOver = (game as { phase?: string } | null)?.phase === 'GAME_OVER';
+  useEffect(() => {
+    if (!hasBots || (handNumber < 1 && !gameOver)) return;
+    let live = true;
+    botNotes(room)
+      .then((n) => live && setNotes(n))
+      .catch(() => {});
+    return () => {
+      live = false;
+    };
+  }, [room, hasBots, handNumber, gameOver]);
 
   useEffect(() => setSlot(document.getElementById(ROOM_SLOT_ID)), []);
 
@@ -74,15 +92,17 @@ export const LiveTable: React.FC<LiveTableProps> = ({ room, nick, playerId, toke
     onLeave();
   };
 
+  const aside = <BotNotesPanel notes={notes} hasBots={hasBots} />;
+
   const board = () => {
     if (gameId === 'hearts') {
-      return <HeartsBoard view={game as HeartsView} playerId={playerId} intent={intent} settings={settings} />;
+      return <HeartsBoard view={game as HeartsView} playerId={playerId} intent={intent} settings={settings} aside={aside} />;
     }
     if (gameId === 'gin-rummy') {
-      return <GinRummyBoard view={game as GinView} playerId={playerId} intent={intent} settings={settings} />;
+      return <GinRummyBoard view={game as GinView} playerId={playerId} intent={intent} settings={settings} aside={aside} />;
     }
     if (gameId === 'poker') {
-      return <PokerBoard view={game as PokerView} playerId={playerId} intent={intent} settings={settings} />;
+      return <PokerBoard view={game as PokerView} playerId={playerId} intent={intent} settings={settings} aside={aside} />;
     }
     return <p className="text-sm text-stone-600">This client cannot render “{gameId}” yet.</p>;
   };

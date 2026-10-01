@@ -199,7 +199,7 @@ export default function App() {
       </main>
 
       {/* Footer */}
-      <Footer wide={live != null || currentScreen === 'game'} />
+      <Footer wide={live != null || currentScreen === 'game'} room={live?.room} />
 
       {/* Modals */}
       <SettingsModal

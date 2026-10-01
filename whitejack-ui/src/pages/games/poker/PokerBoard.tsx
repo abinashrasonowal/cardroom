@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { BotThinking } from '@/components/BotThinking';
 import { CardView } from '@/components/CardView';
+import { isBotNick } from '@/network/api';
 import { TableSettings } from '@/types/game';
 import { PokerHandResult, PokerSeat, PokerView, WireCard } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
@@ -10,6 +12,8 @@ interface PokerBoardProps {
   playerId: string;
   intent: (payload: object) => string;
   settings: TableSettings;
+  /** Extra sidebar sections the live table adds, such as the bots' reasoning. */
+  aside?: React.ReactNode;
 }
 
 const STREET_LABEL = { PREFLOP: 'Pre-flop', FLOP: 'Flop', TURN: 'Turn', RIVER: 'River' } as const;
@@ -31,7 +35,7 @@ const around = (offset: number, count: number, radiusX: number, radiusY: number)
  * raise range, come from `view.legal` / `minRaiseTo` / `maxRaiseTo`; the raise presets only
  * pick a number inside that range, so this component never decides a rule.
  */
-export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, settings }) => {
+export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, settings, aside }) => {
   const myTurn = view.phase === 'BETTING' && view.onClock === playerId && view.legal.length > 0;
   const canRaise = myTurn && view.legal.includes('raise');
   const [raiseTo, setRaiseTo] = useState(view.minRaiseTo);
@@ -290,6 +294,7 @@ export const PokerBoard: React.FC<PokerBoardProps> = ({ view, playerId, intent, 
         </section>
 
         {view.lastHand && <LastHand result={view.lastHand} nickOf={nickOf} settings={settings} />}
+        {aside}
       </aside>
     </div>
   );
@@ -346,8 +351,13 @@ const PokerSeatBadge: React.FC<{ seat: PokerSeat; view: PokerView; you: boolean;
           {you && <span className="text-[11px] font-normal text-stone-300"> (you)</span>}
         </div>
         <div className="text-[11px] sm:text-xs font-mono-code text-amber-200">{chips(seat.stack)}</div>
+        {onClock && !you && isBotNick(seat.nick) && (
+          <div className="flex justify-center">
+            <BotThinking />
+          </div>
+        )}
         {(seat.lastAction || seat.allIn) && (
-          <div className="text-[10px] uppercase tracking-wider text-stone-300">{seat.allIn ? 'All-in' : seat.lastAction}</div>
+          <div className="text-[10px] text-stone-300">{seat.allIn ? 'All-in' : seat.lastAction}</div>
         )}
       </div>
     </div>

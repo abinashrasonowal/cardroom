@@ -1,30 +1,106 @@
-# whitejack
-A Multiplayer Card Game Platform
+# Whitejack
+
+Private multiplayer card tables in the browser — Poker, Hearts and Gin Rummy — with AI bots that
+fill empty seats and show their reasoning after every hand. No accounts, no downloads.
+
+**[Play it at whitejack.games](https://whitejack.games/)** · [How it works](https://whitejack.games/#/about) · [Architecture notes](docs/architecture.md)
+
+[![CI](https://github.com/abinashrasonowal/whitejack/actions/workflows/ci.yml/badge.svg)](https://github.com/abinashrasonowal/whitejack/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg)](LICENSE)
+![Java 17](https://img.shields.io/badge/Java-17-informational.svg)
+![React 19](https://img.shields.io/badge/React-19-informational.svg)
+
+![Demo: create a Poker room, seat two AI bots, play a hand, then read how each bot decided](docs/images/demo.gif)
+
+## Why it's interesting
+
+- **Server-authoritative engine.** Each room is a single-threaded actor that owns the game state.
+  Clients only send intents and get back a view filtered for them, so hidden cards never leave the server.
+- **Games are plug-ins.** A game implements one `GameDefinition` contract and is discovered at
+  runtime. The engine compiles with no game on its classpath.
+- **AI bots that can't cheat or stall.** A bot is an ordinary socket client. It asks an LLM decision
+  model ([Jev](https://openrouter.ai/~typesafe/jev-latest)) to rank exactly the legal moves, falls back
+  to a built-in strategy after 3 s, and its reasoning is published only once the hand is over.
+- **Verifiable shuffles.** Each hand's seed is committed before the deal and revealed after it, and every
+  player's client seed is mixed in, so the server can't choose the deck on its own.
 
 ## Games
 
-These run live on the server, with the server enforcing every rule:
-
-| Game | Players | Summary |
+| Game | Players | Rules in one line |
 | --- | --- | --- |
-| **Poker** | 2–8 | No-limit Texas Hold'em freezeout: 1,000 chips each, blinds 10/20 doubling every 10 hands, side pots for all-ins. Last player with chips wins. |
-| **Hearts** | 4 | Pass three cards, then duck every heart and the Q♠, or take all 26 points to shoot the moon. First to 100 ends it; lowest score wins. |
+| **Poker** | 2–8 | No-limit Texas Hold'em freezeout: 1,000 chips each, blinds 10/20 doubling every 10 hands, side pots for all-ins. |
+| **Hearts** | 4 | Pass three cards, then duck every heart and the Q♠, or take all 26 points to shoot the moon. First to 100 ends it. |
 | **Gin Rummy** | 2 | Build sets and runs, then knock at 10 deadwood or go gin; watch for the undercut. First to 100 wins. |
 
-## Run with Docker
+Every rule is enforced on the server. Short a player? The host adds AI bots from the waiting room.
 
-```sh
-docker compose up --build          # → http://localhost:8080
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph clients["Clients — same protocol"]
+        direction LR
+        B["Browser tab<br/>React"]
+        AI["AI bot<br/>headless client"]
+    end
+    RA["<b>Room actor</b> — one thread per room<br/>validate → reduce → apply"]
+    GD["<b>GameDefinition</b> plug-ins<br/>Poker · Hearts · Gin Rummy · High Card"]
+    JEV[("Jev decision model<br/>via OpenRouter")]
+
+    clients -- "intents over WebSocket" --> RA
+    RA <--> GD
+    RA -- "a view per seat, other hands masked" --> clients
+    AI -. "rank the legal moves" .-> JEV
 ```
 
-or without Compose:
+Clients never decide legality: they send an intent, the room actor validates it against the game,
+applies the resulting events, and sends each seat a view with everyone else's cards removed.
 
-```sh
-docker build -t whitejack .
-docker run -p 8080:8080 -e WHITEJACK_COOKIESECRET=$(openssl rand -hex 32) whitejack
+### One bot turn
+
+```mermaid
+sequenceDiagram
+    participant S as Room (server)
+    participant Bot as AI bot
+    participant J as Jev
+    S->>Bot: view (its hand + the table)
+    Bot->>Bot: list legal moves in plain words
+    Bot->>J: choice question over exactly those moves
+    alt answers within 3 s
+        J-->>Bot: a probability per move
+        Bot->>S: intent: the highest-rated move
+    else slow, failing or no API key
+        Bot->>S: intent: built-in strategy's move
+    end
+    Note over S,J: Each decision is published only after the hand ends
 ```
 
-One image serves the React UI, the REST API and the `/ws` WebSocket from a single JVM.
+A bot's options are its own cards, so each move it makes is recorded and served from
+`GET /api/rooms/{room}/bot-notes` only after that hand is over. The table shows it as the panel below.
+
+<p align="center">
+  <img src="docs/images/bot-reasoning.png" alt="The 'How the bots played' panel: each bot move with Jev's probability for its top options" width="312">
+  <br><sub>The table's "How the bots played" panel after a hand of Poker.</sub>
+</p>
+
+## Quick start
+
+```sh
+docker compose up --build                     # → http://localhost:8080
+```
+
+Without Docker (Java 17 and Node 22):
+
+```sh
+./gradlew :whitejack-server:bootRun           # builds the UI too; http://localhost:8080
+./gradlew :whitejack-server:bootRun -PskipUi  # API only, alongside `npm run dev` in whitejack-ui
+```
+
+For model-backed bots, put `OPENROUTER_API_KEY=…` in `.env` (see `.env.template`). Without a key,
+bots still play using their built-in strategy.
+
+<details>
+<summary><b>Configuration</b></summary>
 
 | Variable | Purpose |
 | --- | --- |
@@ -34,26 +110,46 @@ One image serves the React UI, the REST API and the `/ws` WebSocket from a singl
 | `WHITEJACK_BOTS_MODEL` | Decision model the bots consult (default `~typesafe/jev-latest`, TypeSafe's Jev). |
 | `WHITEJACK_BOTS_ENDPOINT` | Decisions endpoint (default OpenRouter's `https://openrouter.ai/api/alpha/decisions`; TypeSafe's own `https://api.typesafe.ai/v1/systemone` with model `jev-latest` also works). |
 | `WHITEJACK_BOTS_ENABLED` | `false` turns off `POST /api/rooms/{room}/bots` (default `true`). |
+| `WHITEJACK_BOTS_TIMEOUT` | How long a bot waits for the model before playing its heuristic move (default `3s`). |
+| `WHITEJACK_BOTS_MAXPERROOM` | Most bots one room may seat (default `7`). |
+| `WHITEJACK_BOTS_PACE` | Least time between a bot seeing a view and acting on it, so people can follow (default `700ms`). |
 | `WHITEJACK_PORT` | Compose only: host port to publish (default `8080`). |
 
 Rooms are held in memory, so run **one** container: a restart ends games in progress, and a
 second replica would not see the first one's rooms.
 
-## Bots
+</details>
 
-The host can press **Add Jev bot** in a waiting room (or `POST /api/rooms/{room}/bots`) to fill a seat.
-A bot is an ordinary client: it gets a signed token and plays over `/ws` like a browser tab. On each
-turn it lists the legal moves the server's view already exposes and asks
-[Jev](https://openrouter.ai/~typesafe/jev-latest), TypeSafe's decision model, a typed `choice` question
-whose options are exactly those moves. Jev returns a probability for each one, and the bot plays the best
-(for the three-card Hearts pass, the best three). If Jev is slow (`WHITEJACK_BOTS_TIMEOUT`, default `3s`)
-or unavailable, the bot plays a built-in heuristic move instead. So a bot never sends a move the server
-has not already listed as legal.
+## Project layout
 
-## Run locally
+| Module | What it is |
+| --- | --- |
+| [`engine-contract`](engine-contract) | The `GameDefinition` interface and the shared types every game and the engine speak. |
+| [`engine-core`](engine-core) | Room actor, game session, room registry, and seeded commit–reveal dealing. Knows no game. |
+| [`games/*`](games) | Poker, Hearts, Gin Rummy and High Card, each its own module loaded at runtime. |
+| [`whitejack-bots`](whitejack-bots) | The headless bot client, one strategy per game, and the Jev advisor. |
+| [`whitejack-server`](whitejack-server) | Spring Boot app: REST API, WebSocket gateway, bot service. Serves the built UI. |
+| [`whitejack-ui`](whitejack-ui) | React 19 + TypeScript + Tailwind CSS client. |
+
+## Testing
 
 ```sh
-./gradlew :whitejack-server:bootRun                 # builds the UI too; http://localhost:8080
-./gradlew :whitejack-server:bootRun -PskipUi        # API only, alongside `npm run dev` in whitejack-ui
-./gradlew build                                    # everything, with tests
+./gradlew build      # 169 tests across all modules, plus the UI type-check and build
 ```
+
+- **Game rules and redaction:** per-game suites check that legal play works, illegal play is
+  refused, and no view carries another player's cards.
+- **Engine:** room-actor behaviour (hosting, reconnects, seat holds), sessions, and the fairness
+  of seeded shuffles.
+- **End to end:** real socket clients play hands against the running server, and bots finish
+  Hearts, Gin Rummy and High Card hands with a person.
+- **Bot reasoning:** notes for the hand in play are never served, and served notes never include a
+  bot's private description of its hand.
+
+CI runs the same build on every push ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)).
+
+---
+
+Built by [Abinash Sonowal](https://github.com/abinashrasonowal). Feedback and ideas are welcome:
+[abinashrasonowal@gmail.com](mailto:abinashrasonowal@gmail.com) or [open an issue](https://github.com/abinashrasonowal/whitejack/issues).
+Licensed under [MIT](LICENSE).

@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { BotThinking } from '@/components/BotThinking';
 import { CardView } from '@/components/CardView';
+import { isBotNick } from '@/network/api';
 import { TableSettings } from '@/types/game';
 import { GinHandResult, GinSeat, GinView, WireCard } from '@/types/wire';
 import { soundFx } from '@/utils/audio';
@@ -10,6 +12,8 @@ interface GinRummyBoardProps {
   playerId: string;
   intent: (payload: object) => string;
   settings: TableSettings;
+  /** Extra sidebar sections the live table adds, such as the bots' reasoning. */
+  aside?: React.ReactNode;
 }
 
 const cardKey = (card: WireCard) => `${card.rank}-${card.suit}`;
@@ -20,7 +24,7 @@ const contains = (cards: WireCard[], card: WireCard | null) => cards.some((c) =>
  * Gin Rummy, rendered from the server's view. Every button is enabled from the view's legal-move
  * lists (`drawSources`, `discards`, `knockDiscards`, `ginDiscards`); this component decides no rule.
  */
-export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, intent, settings }) => {
+export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, intent, settings, aside }) => {
   const [selected, setSelected] = useState<WireCard | null>(null);
 
   // A new turn phase or a new hand clears the pick.
@@ -243,6 +247,7 @@ export const GinRummyBoard: React.FC<GinRummyBoardProps> = ({ view, playerId, in
         </section>
 
         {view.lastHand && <LastHand result={view.lastHand} nickOf={nickOf} settings={settings} />}
+        {aside}
       </aside>
     </div>
   );
@@ -315,6 +320,7 @@ const SeatBadge: React.FC<{ seat: GinSeat | undefined; view: GinView; you?: bool
         {seat.nick}
         {you && <span className="text-xs font-normal text-stone-300">(you)</span>}
         {seat.id === view.dealer && <span className="text-xs font-normal text-amber-300">dealer</span>}
+        {onClock && !you && isBotNick(seat.nick) && <BotThinking />}
       </div>
       <div className="text-[11px] sm:text-xs text-stone-300">
         {seat.cardCount} cards · {seat.score} pts

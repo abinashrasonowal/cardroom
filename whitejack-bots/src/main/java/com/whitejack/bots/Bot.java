@@ -12,6 +12,7 @@ import java.net.http.WebSocket;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Objects;
@@ -40,7 +41,12 @@ public final class Bot implements AutoCloseable {
      * @param pace the least time between seeing a view and acting on it, so people can follow
      */
     public record Config(URI ws, String token, String playerId, String room, String nick, Advisor advisor,
-            Duration pace, Executor executor) {
+            Duration pace, Executor executor, ReasoningLog notes) {
+        public Config(URI ws, String token, String playerId, String room, String nick, Advisor advisor,
+                Duration pace, Executor executor) {
+            this(ws, token, playerId, room, nick, advisor, pace, executor, ReasoningLog.NONE);
+        }
+
         public Config {
             Objects.requireNonNull(ws, "ws");
             Objects.requireNonNull(token, "token");
@@ -50,6 +56,7 @@ public final class Bot implements AutoCloseable {
             Objects.requireNonNull(advisor, "advisor");
             Objects.requireNonNull(pace, "pace");
             Objects.requireNonNull(executor, "executor");
+            Objects.requireNonNull(notes, "notes");
         }
     }
 
@@ -97,6 +104,9 @@ public final class Bot implements AutoCloseable {
 
     /** The newest game view, with when it arrived. */
     private record Seen(long version, String gameId, JsonNode view, long atNanos) {}
+
+    /** The indices to play and how they were reached. {@code ranking} is null without an advisor answer. */
+    private record Pick(List<Integer> indices, double[] ranking, Decision.Source source, long millis) {}
 
     private Bot(Config config) {
         this.config = config;
@@ -203,6 +213,7 @@ public final class Bot implements AutoCloseable {
             return;
         }
         seated.complete(this); // a reconnect straight into a running game
+        config.notes().handSeen(config.room(), view.path("hand").asInt(-1), "GAME_OVER".equals(view.path("phase").asText()));
         latest = new Seen(viewVersion.incrementAndGet(), frame.path("game").asText(), view, System.nanoTime());
         pump();
     }
@@ -275,7 +286,9 @@ public final class Bot implements AutoCloseable {
                 fallbackOnly = c.key().equals(rejectedKey);
                 key = c.key();
             }
-            List<Integer> pick = fallbackOnly ? c.fallback() : pick(seen.gameId(), c);
+            Pick pick = fallbackOnly
+                    ? new Pick(c.fallback(), null, Decision.Source.AFTER_REJECT, 0)
+                    : pick(seen.gameId(), c);
             waitForPace(seen);
             if (latest != seen && !decide(latest).map(Choice::key).equals(Optional.of(key))) continue;
             synchronized (this) {
@@ -284,8 +297,9 @@ public final class Bot implements AutoCloseable {
                     rejectedKey = null;
                     rejects = 0;
                 }
-                sentId = send("intent", c.intent(pick));
+                sentId = send("intent", c.intent(pick.indices()));
             }
+            note(seen, c, pick);
         }
     }
 
@@ -314,12 +328,32 @@ public final class Bot implements AutoCloseable {
         return brain.choose(view, config.playerId());
     }
 
-    private List<Integer> pick(String gameId, Choice choice) {
-        if (choice.isForced()) return choice.fallback();
+    private Pick pick(String gameId, Choice choice) {
+        if (choice.isForced()) return new Pick(choice.fallback(), null, Decision.Source.FORCED, 0);
         String rules = Brains.forGame(gameId).map(GameBrain::rules).orElse("");
+        long start = System.nanoTime();
         Optional<double[]> ranking = config.advisor().rank(rules, choice);
-        if (ranking.isEmpty() || ranking.get().length != choice.options().size()) return choice.fallback();
-        return choice.best(ranking.get());
+        long millis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start);
+        if (ranking.isEmpty() || ranking.get().length != choice.options().size()) {
+            return new Pick(choice.fallback(), null, Decision.Source.HEURISTIC, millis);
+        }
+        return new Pick(choice.best(ranking.get()), ranking.get(), Decision.Source.ADVISOR, millis);
+    }
+
+    /** Reports a sent move. Only labels and probabilities: never {@code choice.state()}, which holds the hand. */
+    private void note(Seen seen, Choice choice, Pick pick) {
+        try {
+            List<Decision.Option> options = new ArrayList<>(choice.options().size());
+            for (int i = 0; i < choice.options().size(); i++) {
+                Double p = pick.ranking() == null ? null : pick.ranking()[i];
+                options.add(new Decision.Option(choice.options().get(i).label(), p));
+            }
+            String phase = choice.key().contains(":") ? choice.key().substring(0, choice.key().indexOf(':')) : choice.key();
+            config.notes().record(config.room(), new Decision(seen.view().path("hand").asInt(-1), config.playerId(),
+                    config.nick(), phase, options, pick.indices(), pick.source(), pick.millis()));
+        } catch (RuntimeException e) {
+            LOG.log(System.Logger.Level.WARNING, "could not record a decision: {0}", e.toString());
+        }
     }
 
     private void waitForPace(Seen seen) {

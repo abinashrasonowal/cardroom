@@ -196,3 +196,25 @@ export interface PokerView {
   lastHand: PokerHandResult | null;
   winner: string | null;
 }
+
+/** whitejack-bots Decision: one move a bot sent, with every option it weighed. */
+export interface BotDecision {
+  hand: number;
+  player: string;
+  nick: string;
+  /** play · pass (Hearts), draw · discard (Gin), act (Poker). */
+  phase: string;
+  /** `probability` is null when the advisor gave none (a heuristic or forced move). */
+  options: { label: string; probability: number | null }[];
+  /** Indices into `options`, best first. */
+  picked: number[];
+  source: 'ADVISOR' | 'FORCED' | 'HEURISTIC' | 'AFTER_REJECT';
+  /** How long the advisor took; 0 when it was not asked. */
+  millis: number;
+}
+
+/** GET /api/rooms/{room}/bot-notes: finished hands only, newest first. */
+export interface BotHandNotes {
+  hand: number;
+  decisions: BotDecision[];
+}

@@ -33,8 +33,8 @@ export const QuickJoin: React.FC<QuickJoinProps> = ({ onJoin }) => {
           A private card table for you and your friends.
         </h1>
         <p className="text-base text-stone-600 leading-relaxed max-w-[52ch]">
-          Pick a game, share the room link and deal. No downloads, no accounts — fill empty seats
-          with bots when the group is short.
+          Pick a game, share the room link and deal. No downloads, no accounts. Short a player? Seat
+          an AI bot that weighs every legal move — and see its reasoning after each hand.
         </p>
       </div>
 
